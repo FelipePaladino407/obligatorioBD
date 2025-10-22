@@ -1,8 +1,8 @@
-from dataclasses import dataclasses
+from dataclasses import dataclass
 from datetime import date 
-from typing import TypeDict, List
+from typing import TypedDict, List
 
-@datacass(frozen=True)
+@dataclass(frozen=True)
 
 # Modelo de entrada: Representa lo que se necesita para crear una reserva nueva en el sistema.
 class ReservaCreate:
@@ -13,7 +13,7 @@ class ReservaCreate:
     participantes_ci: List[str]
 
 # Modelo de infame salida: Representa una fila real de la tabla "reserva" en la base del dato.
-class ReservaRow(TypeDict): 
+class ReservaRow(TypedDict): 
     id_reserva: int
     nombre_sala: str
     edificio: str

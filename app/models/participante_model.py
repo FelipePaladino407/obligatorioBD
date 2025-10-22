@@ -1,7 +1,7 @@
 from dataclasses import dataclass 
-from typing import TypeDict
+from typing import TypedDict
 
-@dataclass(Frozen=True)
+@dataclass(frozen=True)
 
 class ParticipanteCreate: 
     ci: str
@@ -9,7 +9,7 @@ class ParticipanteCreate:
     apellido: str
     email: str
 
-class ParticipanteRow(TypeDict): 
+class ParticipanteRow(TypedDict): 
     ci: str
     nombre: str
     apallido: str
