@@ -1,6 +1,7 @@
 from dataclasses import dataclass
 from datetime import date 
 from typing import TypedDict, List
+from app.enums.estado_reserva import EstadoReserva
 
 @dataclass(frozen=True)
 
@@ -19,5 +20,5 @@ class ReservaRow(TypedDict):
     edificio: str
     fecha: date 
     id_turno: int
-    estado: str # 'activa' | 'cancelada' | 'sin_asistencia' | 'finalizada'
+    estado: EstadoReserva # 'activa' | 'cancelada' | 'sin_asistencia' | 'finalizada'
 
