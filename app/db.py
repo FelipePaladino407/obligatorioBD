@@ -5,7 +5,7 @@ from mysql.connector import Error, MySQLConnection
 from mysql.connector.abstracts import MySQLConnectionAbstract
 from mysql.connector.errors import DatabaseError
 from mysql.connector.pooling import PooledMySQLConnection
-from config import Config
+from app.config import Config
 
 # Metemos un tipo compuesto (interesante)
 MySQLConn = Union[PooledMySQLConnection, MySQLConnectionAbstract]

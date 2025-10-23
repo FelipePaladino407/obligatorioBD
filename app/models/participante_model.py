@@ -12,5 +12,5 @@ class ParticipanteCreate:
 class ParticipanteRow(TypedDict): 
     ci: str
     nombre: str
-    apallido: str
+    apellido: str
     email: str
