@@ -1,6 +1,6 @@
 Script Completo SQL
 
--- Crear database:
+-- Crear infame database:
 
 CREATE DATABASE reservas_salas_estudio
 CHARACTER SET utf8mb4
