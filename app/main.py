@@ -4,7 +4,8 @@ from mysql.connector import cursor
 from mysql.connector.cursor import MySQLCursor
 from app.models.participante_model import ParticipanteCreate
 from app.services.participante_service import create_participante, eliminar_participante, listar_participantes
-from app.db import execute_query 
+from app.db import execute_query
+from app.services.reserva_service import update_reserva 
 
 
 """
@@ -26,8 +27,9 @@ def main():
             email="pedro.navaja@ucu.edu.uy"
             )
 
-    # create_participante(partete)
+    create_participante(partete)
     # eliminar_participante(partete.ci)
+
     resultete = listar_participantes()
     for row in resultete: 
         print(f"CI: {row['ci']}, Nombre: {row['nombre']}, Apellido: {row['apellido']}, Email: {row['email']}")

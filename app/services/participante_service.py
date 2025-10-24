@@ -1,5 +1,5 @@
 from typing import Any, Dict, List, cast
-from app.models.participante_model import ParticipanteCreate, ParticipanteRow
+from app.models.participante_model import ParticipanteCreate, ParticipanteRow, ParticipanteUpdate
 from app.db import execute_query
 
 def create_participante(p: ParticipanteCreate) -> None:
@@ -38,3 +38,31 @@ def eliminar_participante(ci: str) -> None:
     query: str = "DELETE FROM participante WHERE ci = %s;"
     params: tuple[str] = (ci,) 
     execute_query(query, params, fetch=False)
+
+def update_participante(update: ParticipanteUpdate) -> None:
+    """
+    Actualiza un participeta recibiendo un objeto donde se actualizan los atributos distintos de None
+    Args:
+        update (ParticipanteUpdate): Modelo de participante
+    """
+    query: str = "UPDATE participante SET "
+    params = []
+    updates = []
+
+    if update.nombre is not None:
+        updates.append("nombre = %s")
+        params.append(update.nombre)
+    if update.email is not None:
+        updates.append("email = %s")
+        params.append(update.email)
+    if update.apellido is not None:
+        updates.append("apellido = %s")
+        params.append(update.apellido)
+
+    if not updates:
+        return
+
+    query += ", ".join(updates) + "WHERE ci = %s"
+    params.append(update.ci)
+    execute_query(query, tuple(params), fetch=False)
+
