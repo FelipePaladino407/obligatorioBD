@@ -1,6 +1,6 @@
 USE reservas_salas_estudio;
 
-    -- Consultas:
+-- Consultas:
     -- • Salas más reservadas
 SELECT nombre_sala, COUNT(nombre_sala) as cantidad
 FROM sala
@@ -8,14 +8,32 @@ GROUP BY nombre_sala
 ORDER BY cantidad DESC
 LIMIT 10;
 
-    -- • Turnos más demandados
-
-    -- • Promedio de participantes por sala
+    -- • Turnos mas demandados:
 SELECT t.id_turno, t.hora_inicio, t.hora_fin, COUNT(r.id_reserva) AS cantidad_reservas
 FROM turno t
 LEFT JOIN reserva r ON r.id_turno = t.id_turno
 GROUP BY t.id_turno, t.hora_inicio, t.hora_fin
 ORDER BY cantidad_reservas DESC;
+
+    -- Promedio de participantes por sala:
+SELECT 
+r.nombre_sala, 
+r.edificio, 
+ROUND(AVG(cantidad_personas), 2) AS promedio_participantes
+FROM (
+  SELECT 
+    r.id_reserva,
+    r.nombre_sala, 
+    r.edificio, 
+    COUNT(rp.ci_participante) AS cantidad_personas
+  FROM reserva r
+  LEFT JOIN reserva_participante rp ON rp.id_reserva = r.id_reserva
+  WHERE r.estado IN ('activa', 'finalizada')
+  GROUP BY r.id_reserva, r.nombre_sala, r.edificio
+) AS reservas_con_participantes
+GROUP BY nombre_sala, edificio
+ORDER BY promedio_participantes DESC;
+
 
     -- • Cantidad de reservas por carrera y facultad
 SELECT f.nombre AS facultad, p.nombre_programa AS programa, COUNT(DISTINCT r.id_reserva) AS cantidad_reservas
