@@ -1,5 +1,5 @@
 from dataclasses import dataclass 
-from typing import TypedDict
+from typing import Optional, TypedDict
 
 @dataclass(frozen=True)
 
@@ -12,5 +12,12 @@ class ParticipanteCreate:
 class ParticipanteRow(TypedDict): 
     ci: str
     nombre: str
-    apallido: str
+    apellido: str
     email: str
+
+@dataclass(frozen=True)
+class ParticipanteUpdate:
+    ci: str # obligueta
+    nombre: Optional[str] = None
+    apellido: Optional[str] = None
+    email: Optional[str] = None
