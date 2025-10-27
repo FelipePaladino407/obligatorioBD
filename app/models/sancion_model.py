@@ -16,7 +16,7 @@ class SancionCreate:
     ci_participante: str
     fecha_inicio: date
     fecha_fin: date
-    motivo: Optional[str] = "no asistencia"  # default alineado a la consigna
+    motivo: Optional[str] = "no asistencia"  # el default de la sancion en la BD es "no asisstencia".
 
 @dataclass(frozen=True)
 class SancionKey:

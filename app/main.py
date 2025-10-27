@@ -21,18 +21,31 @@ def main():
     for row in result:
         print(f"Nombre: {row['nombre_sala']}, Edificio: {row['edificio']}, Estado: {row['estado']}")
     partete = ParticipanteCreate(
-            ci="54701087",
-            nombre="Pedro",
-            apellido="Navaja",
-            email="pedro.navaja@ucu.edu.uy"
+            ci="49995071",
+            nombre="Maybeth",
+            apellido="Garcés",
+            email="mayFilosofa123@ucu.edu.uy"
             )
 
-    create_participante(partete)
-    # eliminar_participante(partete.ci)
+    # Verifico si ya existe el participante antes de insertarlo
+    existe = execute_query(
+        "SELECT 1 FROM participante WHERE ci = %s OR email = %s;",
+        (partete.ci, partete.email),
+        fetch=True
+    )
 
+    if existe:
+        print(f"\n⚠️ El participante {partete.nombre} {partete.apellido} ya existe, no se puede insertar nuevamente\n.")
+    else:
+        create_participante(partete)
+        print(f"\n✅ Participante {partete.nombre} {partete.apellido} insertado correctamente.")
+
+    # --- Mostrar todos los participantes ---
+    print("\nParticipantes en el sistema:")
     resultete = listar_participantes()
-    for row in resultete: 
+    for row in resultete:
         print(f"CI: {row['ci']}, Nombre: {row['nombre']}, Apellido: {row['apellido']}, Email: {row['email']}")
+
 
 if __name__ == "__main__":
     main()
