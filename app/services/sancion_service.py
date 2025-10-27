@@ -11,28 +11,28 @@ def crear_sancion(s: SancionCreate) -> None:
     if s.fecha_fin <= s.fecha_inicio:
         raise ValueError("La fecha_fin debe ser posterior a fecha_inicio")
 
-    query = """
+    query: str = """
         INSERT INTO sancion_participante (ci_participante, fecha_inicio, fecha_fin, motivo)
         VALUES (%s, %s, %s, %s);
     """
-    params = (s.ci_participante, s.fecha_inicio, s.fecha_fin, s.motivo)
+    params: tuple[str, date, date, str] = (s.ci_participante, s.fecha_inicio, s.fecha_fin, s.motivo)
     execute_query(query, params, fetch=False)
 
 def eliminar_sancion(ci: str, fecha_inicio: date) -> None:
     """
     Elimina una sanción puntual por PK compuesta (ci_participante, fecha_inicio).
     """
-    query = "DELETE FROM sancion_participante WHERE ci_participante=%s AND fecha_inicio=%s;"
-    params = (ci, fecha_inicio)
+    query: str = "DELETE FROM sancion_participante WHERE ci_participante=%s AND fecha_inicio=%s;"
+    params: tuple[str, date] = (ci, fecha_inicio)
     execute_query(query, params, fetch=False)
 
 def listar_sanciones() -> List[SancionRow]:
-    query = "SELECT ci_participante, fecha_inicio, fecha_fin, motivo FROM sancion_participante;"
+    query: str = "SELECT ci_participante, fecha_inicio, fecha_fin, motivo FROM sancion_participante;"
     result: List[Dict[str, Any]] = execute_query(query, None, fetch=True)
     return cast(List[SancionRow], result)
 
 def listar_sanciones_por_participante(ci: str) -> List[SancionRow]:
-    query = """
+    query: str = """
         SELECT ci_participante, fecha_inicio, fecha_fin, motivo
         FROM sancion_participante
         WHERE ci_participante=%s
@@ -45,11 +45,11 @@ def tiene_sancion_activa(ci: str, en_fecha: date) -> bool:
     """
     Devuelve True si 'en_fecha' pertenece a [fecha_inicio, fecha_fin] para el CI dado.
     """
-    query = """
+    query: str = """
         SELECT 1
         FROM sancion_participante
         WHERE ci_participante=%s AND %s BETWEEN fecha_inicio AND fecha_fin
         LIMIT 1;
     """
-    rows = execute_query(query, (ci, en_fecha), fetch=True)
+    rows: List[Dict] = execute_query(query, (ci, en_fecha), fetch=True)
     return len(rows) > 0

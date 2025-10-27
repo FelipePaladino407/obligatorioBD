@@ -10,15 +10,15 @@ def create_sala(s: SalaCreate) -> None:
     if s.capacidad <= 0:
         raise ValueError("La capacidad debe ser mayor que 0")
 
-    query = """
+    query: str = """
         INSERT INTO sala (nombre_sala, edificio, capacidad, tipo_sala)
         VALUES (%s, %s, %s, %s);
     """
-    params: tuple[str, str, int, str] = (s.nombre_sala, s.edificio, s.capacidad, s.tipo_sala)
+    params: tuple[str, str, int, str] = (s.nombre_sala, s.edificio, s.capacidad, s.tipo_sala.value)
     execute_query(query, params, fetch=False)
 
 def listar_salas() -> List[SalaRow]:
-    query = "SELECT * FROM sala;"
+    query: str = "SELECT * FROM sala;"
     result: List[Dict[str, Any]] = execute_query(query, None, fetch=True)
     return cast(List[SalaRow], result)
 
@@ -26,7 +26,7 @@ def eliminar_sala(nombre_sala: str, edificio: str) -> None:
     """
     Borra la sala. Fallará si hay reservas que referencian esa sala (FK).
     """
-    query = "DELETE FROM sala WHERE nombre_sala=%s AND edificio=%s;"
+    query: str = "DELETE FROM sala WHERE nombre_sala=%s AND edificio=%s;"
     params: tuple[str, str] = (nombre_sala, edificio)
     execute_query(query, params, fetch=False)
 
@@ -51,6 +51,6 @@ def update_sala(update: SalaUpdate) -> None:
     if not sets:
         return
 
-    query = f"UPDATE sala SET {', '.join(sets)} WHERE nombre_sala=%s AND edificio=%s;"
+    query: str = f"UPDATE sala SET {', '.join(sets)} WHERE nombre_sala=%s AND edificio=%s;"
     params.extend([update.nombre_sala, update.edificio])
     execute_query(query, tuple(params), fetch=False)
