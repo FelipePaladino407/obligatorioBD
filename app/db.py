@@ -59,5 +59,21 @@ def execute_query(query: str, params: Optional[tuple[Any, ...]], fetch: bool) ->
     finally:
         cursor.close()
         connection.close()
+
+
+def execute_returning_id(query: str, params: Optional[tuple[Any, ...]] = None) -> int:
+    conn = get_connection()
+    cur = conn.cursor(dictionary=True)
+    try:
+        cur.execute(query, params or ())
+        last_id = cur.lastrowid or 0
+        conn.commit()
+        return last_id
+    except Error as e:
+        conn.rollback()
+        raise e
+    finally:
+        cur.close(); conn.close()
+
         
 
