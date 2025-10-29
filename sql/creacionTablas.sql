@@ -70,11 +70,13 @@ CREATE TABLE turno (
   CONSTRAINT chk_turno_duracion CHECK (TIMESTAMPDIFF(MINUTE, hora_inicio, hora_fin) = 60) -- Verifico que el turno sea de 1 hora exacta.
 );
 
+-- >>> Modificada: se agrega alerta_activa (flag) <<<
 CREATE TABLE sala (
   nombre_sala       VARCHAR(80) NOT NULL,
   edificio          VARCHAR(80) NOT NULL,
   capacidad         SMALLINT     NOT NULL CHECK (capacidad > 0),
   tipo_sala         ENUM('libre','posgrado','docente') NOT NULL,
+  alerta_activa     BOOLEAN NOT NULL DEFAULT FALSE,  -- NUEVO: bandera para dashboards rápidos
   PRIMARY KEY (nombre_sala, edificio),
   CONSTRAINT fk_sala_edificio
     FOREIGN KEY (edificio) REFERENCES edificio(nombre_edificio)
@@ -116,13 +118,68 @@ CREATE TABLE reserva_participante (
 );
 
 CREATE TABLE sancion_participante (
-  ci_participante     VARCHAR(8) NOT NULL,
-  fecha_inicio        DATE NOT NULL,
-  fecha_fin           DATE NOT NULL,
-  motivo              VARCHAR(200) DEFAULT 'no asistencia',
-  PRIMARY KEY (ci_participante, fecha_inicio),
+  id_sancion        INT AUTO_INCREMENT PRIMARY KEY, -- ¡Nueva Clave Primaria! vamo arriba la celeste - GLORIOOOOSA CELESTEEEE.
+  ci_participante   VARCHAR(8) NOT NULL,
+  fecha_inicio      DATE NOT NULL,
+  fecha_fin         DATE NOT NULL,
+  motivo            VARCHAR(200) DEFAULT 'no asistencia',
   CONSTRAINT fk_sancion_ci
     FOREIGN KEY (ci_participante) REFERENCES participante(ci)
     ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT chk_sancion_fechas CHECK (fecha_fin > fecha_inicio)
+  CONSTRAINT chk_sancion_fechas CHECK (fecha_fin > fecha_inicio),
+  -- Se añade un índice único para prevenir sanciones idénticas (mismo participante y misma fecha de inicio),
+  -- aunque con la nueva PK ya se permiten múltiples sanciones.
+  UNIQUE KEY uq_sancion_participante_fecha (ci_participante, fecha_inicio)
+);
+
+-- ======================================
+--  Tablas nuevas: ALERTAS
+-- ======================================
+
+CREATE TABLE alerta_sala (
+  id_alerta        BIGINT AUTO_INCREMENT PRIMARY KEY,
+  nombre_sala      VARCHAR(80) NOT NULL,
+  edificio         VARCHAR(80) NOT NULL,
+  tipo             ENUM('humo','fuego','ruido','rotura','otro') NOT NULL,
+  prioridad        ENUM('baja','media','alta','critica') NOT NULL DEFAULT 'media',
+  estado           ENUM('nueva','en_proceso','resuelta','falsa_alarma') NOT NULL DEFAULT 'nueva',
+  descripcion      VARCHAR(400) NULL,
+  creado_por_ci    VARCHAR(8) NULL,  -- si fue reportada por un usuario (opcional)
+  creado_en        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  actualizado_en   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
+  CONSTRAINT fk_alerta_sala
+    FOREIGN KEY (nombre_sala, edificio) REFERENCES sala(nombre_sala, edificio)
+    ON UPDATE CASCADE ON DELETE RESTRICT,
+  CONSTRAINT fk_alerta_creador
+    FOREIGN KEY (creado_por_ci) REFERENCES participante(ci)
+    ON UPDATE CASCADE ON DELETE SET NULL,
+  KEY idx_alerta_estado (estado),
+  KEY idx_alerta_prioridad (prioridad),
+  KEY idx_alerta_creado (creado_en)
+);
+
+CREATE TABLE alerta_evento (
+  id_evento     BIGINT AUTO_INCREMENT PRIMARY KEY,
+  id_alerta     BIGINT NOT NULL,
+  de_estado     ENUM('nueva','en_proceso','resuelta','falsa_alarma') NULL,
+  a_estado      ENUM('nueva','en_proceso','resuelta','falsa_alarma') NOT NULL,
+  nota          VARCHAR(300) NULL,
+  hecho_por_ci  VARCHAR(8) NULL,
+  creado_en     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  CONSTRAINT fk_evento_alerta
+    FOREIGN KEY (id_alerta) REFERENCES alerta_sala(id_alerta)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  CONSTRAINT fk_evento_actor
+    FOREIGN KEY (hecho_por_ci) REFERENCES participante(ci)
+    ON UPDATE CASCADE ON DELETE SET NULL,
+  KEY idx_evento_alerta (id_alerta),
+  KEY idx_evento_creado (creado_en)
+);
+
+CREATE TABLE contacto_edificio (
+  edificio       VARCHAR(80) PRIMARY KEY,
+  email_contacto VARCHAR(120) NOT NULL,
+  CONSTRAINT fk_contacto_edificio
+    FOREIGN KEY (edificio) REFERENCES edificio(nombre_edificio)
+    ON UPDATE CASCADE ON DELETE CASCADE
 );
