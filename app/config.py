@@ -12,3 +12,4 @@ class Config:
     DB_USER: str = os.getenv("DB_USER", "root")
     DB_PASS: str = os.getenv("DB_PASS", "")
     DB_NAME: str = os.getenv("DB_NAME", "gestion_salas")
+    SECRET_KEY: str = os.getenv("SECRET_KEY", "shhh")
