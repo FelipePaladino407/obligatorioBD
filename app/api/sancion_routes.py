@@ -2,6 +2,7 @@
 from typing import List
 from flask import Blueprint, jsonify, request
 
+from app.auth import required_token
 from app.models.sancion_model import SancionCreate
 from app.services.sancion_service import crear_sancion, listar_sanciones
 
