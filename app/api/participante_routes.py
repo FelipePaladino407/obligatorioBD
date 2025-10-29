@@ -10,6 +10,7 @@ def listar():
     return jsonify(participantes)
 
 @participante_bp.post("/")
+@required_token
 def crear():
     data = request.get_json(force=True)
     participante = ParticipanteCreate(
@@ -23,6 +24,7 @@ def crear():
 
 
 @participante_bp.delete("/<string:ci>")
+@required_token
 def eliminar(ci: str):
     eliminar_participante(ci)
     return jsonify({"message": "Participante eliminado"}), 200

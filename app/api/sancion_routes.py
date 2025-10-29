@@ -14,6 +14,7 @@ def list():
     return jsonify(sanciones)
 
 @sancion_bp.post("/")
+@required_token
 def create():
     data = request.get_json(force=True)
     sancion = SancionCreate(
