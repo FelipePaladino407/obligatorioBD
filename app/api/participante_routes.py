@@ -31,8 +31,7 @@ def eliminar(ci: str):
     return jsonify({"message": "Participante eliminado"}), 200
 
 
-@participante_bp.patch("/<string:ci>")
-@required_token
+
 
 @participante_bp.patch("/<string:ci>")
 @required_token
