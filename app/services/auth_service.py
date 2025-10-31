@@ -1,6 +1,6 @@
 from typing import Any, Dict, Optional
 from app.db import execute_query
-# import bcrypt  # Descomentar en producción
+import bcrypt 
 
 def verify_user(correo: str, contrasena: str) -> Optional[Dict[str, Any]]:
     """
@@ -21,12 +21,10 @@ def verify_user(correo: str, contrasena: str) -> Optional[Dict[str, Any]]:
     user_row = result[0]
     hash_guardado: str = user_row["contrasena"]
 
-    # 🔹 Desarrollo: comparación directa
     if contrasena == hash_guardado:
         return user_row  
 
-    # 🔹 Producción: usar bcrypt
-    # if bcrypt.checkpw(contrasena.encode("utf-8"), hash_guardado.encode("utf-8")):
-    #     return user_row  
+    if bcrypn.checkpw(contrasena.encode("utf-8"), hash_guardado.encode("utf-8")):
+        return user_row  
 
     return None
