@@ -6,6 +6,7 @@ from mysql.connector.abstracts import MySQLConnectionAbstract
 from mysql.connector.errors import DatabaseError
 from mysql.connector.pooling import PooledMySQLConnection
 from app.config import Config
+from app.validators.validator import validate_params
 
 # Metemos un tipo compuesto (interesante)
 MySQLConn = Union[PooledMySQLConnection, MySQLConnectionAbstract]
@@ -42,6 +43,8 @@ def execute_query(query: str, params: Optional[tuple[Any, ...]], fetch: bool) ->
     Returns:
         List[Dict[str, Any]]: lista de resultados de la consulta (devuelve [] si fetch = false)
     """
+    validate_params(params)
+
     connection: MySQLConn = get_connection()
     cursor = connection.cursor(dictionary=True)
 

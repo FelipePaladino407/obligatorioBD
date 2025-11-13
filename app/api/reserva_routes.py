@@ -6,6 +6,7 @@ from app.services.reserva_service import create_reserva, list_reservas, remove_r
 reserva_bp = Blueprint("reserva", __name__)
 
 @reserva_bp.get("/")
+@required_token
 def get_reservas():
     reservas = list_reservas()
     # Convertimos todo a tipos que JSON entiende
