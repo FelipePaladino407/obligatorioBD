@@ -1,24 +1,36 @@
 from datetime import date
 from typing import Dict, List, cast
-from app.db import execute_query
+from app.db import execute_query, execute_returning_id
 from app.models.participante_model import ParticipanteRow
 from app.models.reserva_model import ReservaCreate, ReservaRow, ReservaUpdate
 from app.enums.estado_reserva import EstadoReserva
 
 
 def create_reserva(r: ReservaCreate) -> None:
+    # crea la reserva y obtener el id generado (muy importante)
+    query_reserva = """
+    INSERT INTO reserva (nombre_sala, edificio, fecha, id_turno, estado)
+    VALUES (%s, %s, %s, %s, %s);
     """
-    Crea una reserva, claramente
-    Args:
-        r (ReservaCreate): Modelo de reserva
+    params_reserva = (
+        r.nombre_sala,
+        r.edificio,
+        r.fecha,
+        r.id_turno,
+        r.estado.value,
+    )
+
+    id_reserva = execute_returning_id(query_reserva, params_reserva)
+
+    query_participante = """
+    INSERT INTO reserva_participante (ci_participante, id_reserva, asistencia)
+    VALUES (%s, %s, %s);
     """
-    query: str = """
-    INSERT INTO reserva (nombre_sala, edificio, fecha, id_turno, estado) 
-    VALUES
-    (%s, %s, %s, %s, %s);
-    """
-    params: tuple[str, str, date, int, str] = (r.nombre_sala, r.edificio, r.fecha, r.id_turno, r.estado.value)
-    execute_query(query, params, fetch=False)
+
+    for ci in r.participantes_ci:
+        params_participante = (ci, id_reserva, False)
+        execute_query(query_participante, params_participante, fetch=False)
+
 
 def remove_reserva(id: int) -> None:
     """
@@ -76,3 +88,9 @@ def update_reserva(update: ReservaUpdate) -> None:
     query += ", ".join(updates) + " WHERE id_reserva = %s"
     params.append(update.id_reserva)
     execute_query(query, tuple(params), fetch=False)
+
+# def verificar_restricciones(r: ReservaCreate):
+#     if :
+#         pass
+#
+#     
