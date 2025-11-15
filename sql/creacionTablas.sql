@@ -53,7 +53,7 @@ CREATE TABLE participante_programa_academico (
   id_alumno_programa  BIGINT AUTO_INCREMENT PRIMARY KEY,   -- Pongo BigInt porque asumo que las reservas se van a ir acumulando año tras año.
   ci_participante      VARCHAR(8) NOT NULL,
   nombre_programa      VARCHAR(120) NOT NULL,
-  rol                  ENUM('alumno','docente') NOT NULL,
+  rol                  ENUM('estudiante_grado','estudiante_posgrado', 'docente') NOT NULL,
   CONSTRAINT fk_pp_ci
     FOREIGN KEY (ci_participante) REFERENCES participante(ci)
     ON UPDATE CASCADE ON DELETE RESTRICT,
