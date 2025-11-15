@@ -51,15 +51,15 @@ VALUES
 
 INSERT INTO participante_programa_academico (ci_participante, nombre_programa, rol) 
 VALUES
-('48012345', 'Lic. en Negocios Internacionales', 'alumno'),
-('49056789', 'Ingeniería Informática', 'alumno'),
+('48012345', 'Lic. en Negocios Internacionales', 'estudiante_grado'),
+('49056789', 'Ingeniería Informática', 'estudiante_grado'),
 ('54055666', 'Ingeniería Informática', 'docente'),
-('59055566', 'Psicología Clínica', 'alumno'),
-('56099000', 'MBA', 'alumno'),
+('59055566', 'Psicología Clínica', 'estudiante_grado'),
+('56099000', 'MBA', 'estudiante_posgrado'),
 ('52033444', 'Derecho Penal', 'docente'),
-('57011122', 'MBA', 'alumno'),
-('58033344', 'Lic. en Negocios Internacionales', 'alumno'),
-('50111222', 'Ingeniería Informática', 'alumno'),
+('57011122', 'MBA', 'estudiante_posgrado'),
+('58033344', 'Lic. en Negocios Internacionales', 'estudiante_grado'),
+('50111222', 'Ingeniería Informática', 'estudiante_grado'),
 ('55077888', 'MBA', 'docente');
 
 
