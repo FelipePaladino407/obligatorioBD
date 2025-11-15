@@ -1,6 +1,7 @@
 from typing import Any, Dict, List, cast, Optional, Tuple
 from app.db import execute_query
 from app.models.sala_model import SalaCreate, SalaRow, SalaUpdate, SalaEstadoRow, EstadoOperativo
+from app.enums.tipo_sala import TipoSala
 
 def create_sala(s: SalaCreate) -> None:
     """
@@ -54,6 +55,34 @@ def update_sala(update: SalaUpdate) -> None:
     query: str = f"UPDATE sala SET {', '.join(sets)} WHERE nombre_sala=%s AND edificio=%s;"
     params.extend([update.nombre_sala, update.edificio])
     execute_query(query, tuple(params), fetch=False)
+    
+    
+    
+def get_tipo_sala(nombre_sala: str, edificio: str) -> TipoSala:
+    query: str = "SELECT tipo_sala FROM sala WHERE nombre_sala=%s AND edificio=%s;"
+    params: tuple[str, str] = (nombre_sala, edificio) 
+    result = execute_query(query, params, fetch=True)
+    return cast(TipoSala, result[0]['tipo_sala'])
+
+
+def get_sala(nombre_sala: str, edificio: str) -> Optional[SalaRow]:
+    """
+    Obtiene una sala por su clave primaria compuesta (nombre_sala, edificio).
+    Devuelve un SalaRow o None si no existe.
+    """
+    query = """
+        SELECT * 
+        FROM sala
+        WHERE nombre_sala = %s AND edificio = %s;
+    """
+    params = (nombre_sala, edificio)
+
+    result: List[Dict[str, Any]] = execute_query(query, params, fetch=True)
+
+    if not result:
+        return None
+
+    return cast(SalaRow, result[0])
 
 
 # +++ NUEVO: leer estado (VIEW → fallback)

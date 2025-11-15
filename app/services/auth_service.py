@@ -24,7 +24,7 @@ def verify_user(correo: str, contrasena: str) -> Optional[Dict[str, Any]]:
     if contrasena == hash_guardado:
         return user_row  
 
-    if bcrypn.checkpw(contrasena.encode("utf-8"), hash_guardado.encode("utf-8")):
+    if bcrypt.checkpw(contrasena.encode("utf-8"), hash_guardado.encode("utf-8")):
         return user_row  
 
     return None

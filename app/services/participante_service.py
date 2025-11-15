@@ -1,4 +1,5 @@
 from typing import Any, Dict, List, cast
+from app.enums import tipo_usuario
 from app.models.participante_model import ParticipanteCreate, ParticipanteRow, ParticipanteUpdate
 from app.db import execute_query
 
@@ -65,4 +66,12 @@ def update_participante(update: ParticipanteUpdate) -> None:
     query += ", ".join(updates) + "WHERE ci = %s"
     params.append(update.ci)
     execute_query(query, tuple(params), fetch=False)
+
+def get_participante_rol(ci: str) -> tipo_usuario.TipoUsuario:
+    query: str = """
+    SELECT rol FROM participante_programa_academico WHERE ci_participante = %s; 
+    """
+    params: tuple[str] = (ci, );
+    rol: List[Dict[str, Any]] = execute_query(query, params, fetch=True);
+    return cast(tipo_usuario.TipoUsuario, rol[0]["rol"])
 

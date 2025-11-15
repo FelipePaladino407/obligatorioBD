@@ -1,24 +1,50 @@
 from datetime import date
+from re import error
 from typing import Dict, List, cast
-from app.db import execute_query
+from app.db import execute_query, execute_returning_id
+from app.enums.tipo_sala import TipoSala
+from app.enums.tipo_usuario import TipoUsuario
 from app.models.participante_model import ParticipanteRow
 from app.models.reserva_model import ReservaCreate, ReservaRow, ReservaUpdate
 from app.enums.estado_reserva import EstadoReserva
+from app.services.participante_service import get_participante_rol
+from app.services.sala_service import get_sala, get_tipo_sala
 
 
 def create_reserva(r: ReservaCreate) -> None:
+    # crea la reserva y obtener el id generado (muy importante)
+    query_reserva = """
+    INSERT INTO reserva (nombre_sala, edificio, fecha, id_turno, estado)
+    VALUES (%s, %s, %s, %s, %s);
     """
-    Crea una reserva, claramente
-    Args:
-        r (ReservaCreate): Modelo de reserva
+    params_reserva = (
+        r.nombre_sala,
+        r.edificio,
+        r.fecha,
+        r.id_turno,
+        r.estado.value,
+    )
+
+    validar_capacidad(r)
+    validar_participantes_rol_sala(r)
+    # OJO -> FALTA: 
+    # 4. Validar límites (solo grado):
+    #       - máximo 2 horas por día
+    #       - máximo 3 reservas activas por semana
+    # 5. Si todo OK -> insertar reserva
+    # 6. Insertar reserva_participante para cada CI
+
+    id_reserva = execute_returning_id(query_reserva, params_reserva)
+
+    query_participante = """
+    INSERT INTO reserva_participante (ci_participante, id_reserva, asistencia)
+    VALUES (%s, %s, %s);
     """
-    query: str = """
-    INSERT INTO reserva (nombre_sala, edificio, fecha, id_turno, estado) 
-    VALUES
-    (%s, %s, %s, %s, %s);
-    """
-    params: tuple[str, str, date, int, str] = (r.nombre_sala, r.edificio, r.fecha, r.id_turno, r.estado.value)
-    execute_query(query, params, fetch=False)
+
+    for ci in r.participantes_ci:
+        params_participante = (ci, id_reserva, False)
+        execute_query(query_participante, params_participante, fetch=False)
+
 
 def remove_reserva(id: int) -> None:
     """
@@ -76,3 +102,28 @@ def update_reserva(update: ReservaUpdate) -> None:
     query += ", ".join(updates) + " WHERE id_reserva = %s"
     params.append(update.id_reserva)
     execute_query(query, tuple(params), fetch=False)
+
+    
+def validar_participantes_rol_sala(r: ReservaCreate):
+    tipo_sala = get_sala(r.nombre_sala, r.edificio)["tipo_sala"]
+
+    for p in r.participantes_ci:
+        rol = get_participante_rol(p)
+
+        if tipo_sala == "uso_libre":
+            continue
+
+        if tipo_sala == "posgrado" and rol not in ("docente", "estudiante_posgrado"):
+            raise error("Solo docentes y posgrado pueden reservar esta sala")
+
+        if tipo_sala == "docente" and rol != "docente":
+            raise error("Solo docentes pueden reservar esta sala")
+
+def validar_capacidad(r: ReservaCreate):
+    cap: int = int(get_sala(r.nombre_sala, r.edificio)["capacidad"])
+
+    if len(r.participantes_ci) > cap:
+        raise error("Son muchos, vayanse")
+
+# def validar_cantidad_reservas(r: ReservaCreate):
+#     raise error("pa")

@@ -12,7 +12,7 @@ class ReservaCreate:
     fecha: date 
     id_turno: int
     estado: EstadoReserva # 'activa' | 'cancelada' | 'sin_asistencia' | 'finalizada'
-    # participantes_ci: List[str]
+    participantes_ci: List[str]
 
 # Modelo de infame salida: Representa una fila real de la tabla "reserva" en la base del dato.
 class ReservaRow(TypedDict): 
