@@ -81,7 +81,7 @@ INSERT INTO turno (id_turno, hora_inicio, hora_fin) VALUES
 (15, '22:00:00', '23:00:00');
 
 
-INSERT INTO sala 
+INSERT INTO sala (nombre_sala, edificio, capacidad, tipo_sala) -- el estado es por defecto "operativa".
 VALUES
 ('Sala 1', 'El central', 15, 'libre'),
 ('Sala 2', 'El central', 10, 'libre'),
@@ -110,7 +110,7 @@ INSERT INTO reserva_participante (ci_participante, id_reserva, asistencia) VALUE
 ('58033344', 5, FALSE);
 
 
-INSERT INTO sancion_participante 
+INSERT INTO sancion_participante (ci_participante, fecha_inicio, fecha_fin, motivo) -- el id es AUTO INCREMENT.
 VALUES
 ('54055666', '2025-10-15', '2025-12-15', 'No asistencia a reserva 3'),
 ('49056789', '2025-10-14', '2025-12-14', 'Morosidad en la biblioteca'),
