@@ -124,3 +124,6 @@ def validar_capacidad(r: ReservaCreate):
 
     if len(r.participantes_ci) > cap:
         raise error("Son muchos, vayanse")
+
+# def validar_cantidad_reservas(r: ReservaCreate):
+#     raise error("pa")

@@ -5,10 +5,10 @@ from app.services.sala_service import get_tipo_sala
 app = create_app()
 
 if __name__ == "__main__":
-    # app.run(debug=True)
-    print(get_participante_rol('54055666'))
-    print(get_tipo_sala('Sala 3', 'Mullin'))
-
+    app.run(debug=True)
+    # print(get_participante_rol('54055666'))
+    # print(get_tipo_sala('Sala 3', 'Mullin'))
+    #
 
 # from ast import Tuple
 # from typing import Any, List
