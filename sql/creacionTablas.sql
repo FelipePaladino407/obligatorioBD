@@ -70,13 +70,13 @@ CREATE TABLE turno (
   CONSTRAINT chk_turno_duracion CHECK (TIMESTAMPDIFF(MINUTE, hora_inicio, hora_fin) = 60) -- Verifico que el turno sea de 1 hora exacta.
 );
 
--- >>> Modificada: se agrega alerta_activa (flag) <<<
+-- >>> Modificada: se agrega "estado" <<<
 CREATE TABLE sala (
   nombre_sala       VARCHAR(80) NOT NULL,
   edificio          VARCHAR(80) NOT NULL,
   capacidad         SMALLINT     NOT NULL CHECK (capacidad > 0),
   tipo_sala         ENUM('libre','posgrado','docente') NOT NULL,
-  alerta_activa     BOOLEAN NOT NULL DEFAULT FALSE,  -- NUEVO: bandera para dashboards rápidos
+  estado            ENUM('operativa', 'con_inconvenientes', 'fuera_de_servicio') NOT NULL DEFAULT 'operativa',
   PRIMARY KEY (nombre_sala, edificio),
   CONSTRAINT fk_sala_edificio
     FOREIGN KEY (edificio) REFERENCES edificio(nombre_edificio)
@@ -136,50 +136,51 @@ CREATE TABLE sancion_participante (
 --  Tablas nuevas: ALERTAS
 -- ======================================
 
-CREATE TABLE alerta_sala (
-  id_alerta        BIGINT AUTO_INCREMENT PRIMARY KEY,
-  nombre_sala      VARCHAR(80) NOT NULL,
-  edificio         VARCHAR(80) NOT NULL,
-  tipo             ENUM('humo','fuego','ruido','rotura','otro') NOT NULL,
-  prioridad        ENUM('baja','media','alta','critica') NOT NULL DEFAULT 'media',
-  estado           ENUM('nueva','en_proceso','resuelta','falsa_alarma') NOT NULL DEFAULT 'nueva',
-  descripcion      VARCHAR(400) NULL,
-  creado_por_ci    VARCHAR(8) NULL,  -- si fue reportada por un usuario (opcional)
-  creado_en        DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  actualizado_en   DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
-  CONSTRAINT fk_alerta_sala
-    FOREIGN KEY (nombre_sala, edificio) REFERENCES sala(nombre_sala, edificio)
+CREATE TABLE incidencia_sala (
+  id_incidencia     BIGINT AUTO_INCREMENT PRIMARY KEY,
+  nombre_sala       VARCHAR(80) NOT NULL,
+  edificio          VARCHAR(80) NOT NULL,
+  id_reserva        BIGINT NULL,         -- reserva desde la que se reportó (si aplica).
+  ci_reportante     VARCHAR(8) NOT NULL, -- participante que reporta.
+
+  tipo              ENUM('infraestructura','equipamiento','limpieza','ruido','otro') NOT NULL,
+  gravedad          ENUM('baja','media','alta') NOT NULL,
+  descripcion       VARCHAR(500) NOT NULL,
+
+  estado            ENUM('abierta','en_proceso','resuelta') NOT NULL DEFAULT 'abierta',
+  fecha_reporte     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  fecha_resolucion  DATETIME NULL,
+
+  CONSTRAINT fk_incidencia_sala
+    FOREIGN KEY (nombre_sala, edificio)
+    REFERENCES sala(nombre_sala, edificio)
     ON UPDATE CASCADE ON DELETE RESTRICT,
-  CONSTRAINT fk_alerta_creador
-    FOREIGN KEY (creado_por_ci) REFERENCES participante(ci)
+
+  CONSTRAINT fk_incidencia_reserva
+    FOREIGN KEY (id_reserva) REFERENCES reserva(id_reserva)
     ON UPDATE CASCADE ON DELETE SET NULL,
-  KEY idx_alerta_estado (estado),
-  KEY idx_alerta_prioridad (prioridad),
-  KEY idx_alerta_creado (creado_en)
+
+  CONSTRAINT fk_incidencia_reportante
+    FOREIGN KEY (ci_reportante) REFERENCES participante(ci)
+    ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
-CREATE TABLE alerta_evento (
-  id_evento     BIGINT AUTO_INCREMENT PRIMARY KEY,
-  id_alerta     BIGINT NOT NULL,
-  de_estado     ENUM('nueva','en_proceso','resuelta','falsa_alarma') NULL,
-  a_estado      ENUM('nueva','en_proceso','resuelta','falsa_alarma') NOT NULL,
-  nota          VARCHAR(300) NULL,
-  hecho_por_ci  VARCHAR(8) NULL,
-  creado_en     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
-  CONSTRAINT fk_evento_alerta
-    FOREIGN KEY (id_alerta) REFERENCES alerta_sala(id_alerta)
+CREATE TABLE alerta_reserva (
+  id_alerta         BIGINT AUTO_INCREMENT PRIMARY KEY,
+  id_reserva        BIGINT NOT NULL,
+  id_incidencia     BIGINT NOT NULL,
+
+  tipo_alerta       ENUM('sala_inhabilitada','inconveniente','recordatorio') NOT NULL,
+  mensaje           VARCHAR(500) NOT NULL,
+
+  fecha_creacion    DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  leida             BOOLEAN NOT NULL DEFAULT FALSE,
+
+  CONSTRAINT fk_alerta_reserva
+    FOREIGN KEY (id_reserva) REFERENCES reserva(id_reserva)
     ON UPDATE CASCADE ON DELETE CASCADE,
-  CONSTRAINT fk_evento_actor
-    FOREIGN KEY (hecho_por_ci) REFERENCES participante(ci)
-    ON UPDATE CASCADE ON DELETE SET NULL,
-  KEY idx_evento_alerta (id_alerta),
-  KEY idx_evento_creado (creado_en)
-);
 
-CREATE TABLE contacto_edificio (
-  edificio       VARCHAR(80) PRIMARY KEY,
-  email_contacto VARCHAR(120) NOT NULL,
-  CONSTRAINT fk_contacto_edificio
-    FOREIGN KEY (edificio) REFERENCES edificio(nombre_edificio)
+  CONSTRAINT fk_alerta_incidencia
+    FOREIGN KEY (id_incidencia) REFERENCES incidencia_sala(id_incidencia)
     ON UPDATE CASCADE ON DELETE CASCADE
 );
