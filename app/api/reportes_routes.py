@@ -1,4 +1,4 @@
-from typing import TypedDict, Optional
+from typing import TypedDict, Optional, cast
 from flask import Blueprint, jsonify, request
 from app.auth import required_token
 from app.services.reportes_service import ejecutar_consulta, ConsultaID
@@ -23,7 +23,6 @@ def get_reportes():
         "edificio": request.args.get("edificio"),
         "facultad": request.args.get("facultad"),
     }
-    # paginación segura
     try:
         params["limit"] = int(request.args.get("limit", "50"))
         params["offset"] = int(request.args.get("offset", "0"))
@@ -31,10 +30,12 @@ def get_reportes():
         return jsonify({"error": "limit/offset inválidos"}), 400
 
     try:
-        payload = ejecutar_consulta(ConsultaID(id_consulta), params)
+        # ❌ NO: ejecutar_consulta(ConsultaID(id_consulta), params)
+        payload = ejecutar_consulta(cast(ConsultaID, id_consulta), params)  # ✅
         return jsonify(payload), 200
     except ValueError as ve:
         return jsonify({"error": str(ve)}), 400
-    except Exception:
-        # log interno recomendado
+    except Exception as e:
+        # si querés ver el motivo exacto en tests:
+        # return jsonify({"error": "Error interno", "detail": str(e)}), 500
         return jsonify({"error": "Error interno ejecutando la consulta"}), 500

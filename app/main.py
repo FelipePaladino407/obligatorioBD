@@ -2,7 +2,10 @@ from app import create_app
 from app.services.participante_service import get_participante_rol
 from app.services.sala_service import get_tipo_sala
 
+
+
 app = create_app()
+
 
 if __name__ == "__main__":
     app.run(debug=True)
