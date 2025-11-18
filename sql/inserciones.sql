@@ -42,11 +42,11 @@ VALUES
 
 INSERT INTO login 
 VALUES
-('cotiBlanco@ucu.edu.uy', '2468'),
-('marrarteChelo@ucu.edu.uy', '1234'),
-('sebaTorres@ucu.edu.uy', '123456789'),
-('santiagoBlancoc@ucu.edu.uy', 'iHateWindows'),
-('whiskey@ucu.edu.uy', 'uuuu');
+('cotiBlanco@ucu.edu.uy', '2468', 'false'),
+('marrarteChelo@ucu.edu.uy', '1234', 'true'),
+('sebaTorres@ucu.edu.uy', '123456789', 'false'),
+('santiagoBlancoc@ucu.edu.uy', 'iHateWindows', 'false'),
+('whiskey@ucu.edu.uy', 'uuuu', 'false');
 
 
 INSERT INTO participante_programa_academico (ci_participante, nombre_programa, rol) 
