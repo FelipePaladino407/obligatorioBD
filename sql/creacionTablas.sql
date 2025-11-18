@@ -44,6 +44,7 @@ CREATE TABLE participante (
 CREATE TABLE login (
   correo            VARCHAR(120) PRIMARY KEY,
   contrasena        VARCHAR(128) NOT NULL,
+  isAdmin           BOOLEAN NOT NULL,
   CONSTRAINT fk_login_participante_email
     FOREIGN KEY (correo) REFERENCES participante(email)
     ON UPDATE CASCADE ON DELETE RESTRICT
