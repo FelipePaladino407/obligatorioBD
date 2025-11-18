@@ -99,7 +99,7 @@ CREATE TABLE reserva (
     FOREIGN KEY (id_turno) REFERENCES turno(id_turno)
     ON UPDATE CASCADE ON DELETE RESTRICT,
   -- No permitir doble reserva de la misma sala en mismo día/turno:
-  UNIQUE KEY uq_reserva_slot (nombre_sala, edificio, fecha, id_turno),
+  UNIQUE KEY uq_reserva_slot (nombre_sala, edificio, fecha, id_turno)
 );
 
 CREATE TABLE reserva_participante (
@@ -185,3 +185,29 @@ CREATE TABLE alerta_reserva (
     FOREIGN KEY (id_incidencia) REFERENCES incidencia_sala(id_incidencia)
     ON UPDATE CASCADE ON DELETE CASCADE
 );
+
+-- View para ver el estado de las salas:
+DROP VIEW IF EXISTS vista_estado_sala;
+
+CREATE VIEW vista_estado_sala AS
+SELECT
+  s.nombre_sala,
+  s.edificio,
+  CASE
+    WHEN EXISTS (
+      SELECT 1 FROM incidencia_sala i
+      WHERE i.nombre_sala = s.nombre_sala
+        AND i.edificio    = s.edificio
+        AND i.estado <> 'resuelta'
+        AND i.gravedad = 'alta'
+    ) THEN 'fuera_de_servicio'
+    WHEN EXISTS (
+      SELECT 1 FROM incidencia_sala i
+      WHERE i.nombre_sala = s.nombre_sala
+        AND i.edificio    = s.edificio
+        AND i.estado <> 'resuelta'
+    ) THEN 'con_inconvenientes'
+    ELSE 'operativa'
+  END AS estado_calculado,
+  s.estado AS estado_manual
+FROM sala s;

@@ -12,13 +12,13 @@ class IncidenciaCreate:
     tipo: TipoIncidencia
     gravedad: GravedadIncidencia
     descripcion: str
-    id_reserva: Optional[int] = None  # si la reportás desde una reserva concreta
+    id_reserva: Optional[int] = None
 
 @dataclass(frozen=True)
 class IncidenciaUpdateEstado:
     id_incidencia: int
     nuevo_estado: EstadoIncidencia
-    # Si quisieras log de notas/eventos de cambio, podrías agregar "nota" y crear una tabla incidencia_evento.
+
 
 class IncidenciaRow(TypedDict, total=False):
     id_incidencia: int
