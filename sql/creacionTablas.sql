@@ -44,6 +44,7 @@ CREATE TABLE participante (
 CREATE TABLE login (
   correo            VARCHAR(120) PRIMARY KEY,
   contrasena        VARCHAR(128) NOT NULL,
+  isAdmin           BOOLEAN NOT NULL,
   CONSTRAINT fk_login_participante_email
     FOREIGN KEY (correo) REFERENCES participante(email)
     ON UPDATE CASCADE ON DELETE RESTRICT
@@ -98,7 +99,7 @@ CREATE TABLE reserva (
     FOREIGN KEY (id_turno) REFERENCES turno(id_turno)
     ON UPDATE CASCADE ON DELETE RESTRICT,
   -- No permitir doble reserva de la misma sala en mismo día/turno:
-  UNIQUE KEY uq_reserva_slot (nombre_sala, edificio, fecha, id_turno),
+  UNIQUE KEY uq_reserva_slot (nombre_sala, edificio, fecha, id_turno)
 );
 
 CREATE TABLE reserva_participante (

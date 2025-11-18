@@ -30,12 +30,12 @@ def get_reportes():
         return jsonify({"error": "limit/offset inválidos"}), 400
 
     try:
-        # ❌ NO: ejecutar_consulta(ConsultaID(id_consulta), params)
-        payload = ejecutar_consulta(cast(ConsultaID, id_consulta), params)  # ✅
+        # NO: ejecutar_consulta(ConsultaID(id_consulta), params)
+        payload = ejecutar_consulta(cast(ConsultaID, id_consulta), params)
         return jsonify(payload), 200
     except ValueError as ve:
         return jsonify({"error": str(ve)}), 400
     except Exception as e:
-        # si querés ver el motivo exacto en tests:
+        # para ver el error exacto en los tetst:
         # return jsonify({"error": "Error interno", "detail": str(e)}), 500
         return jsonify({"error": "Error interno ejecutando la consulta"}), 500

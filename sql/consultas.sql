@@ -1,38 +1,54 @@
 USE reservas_salas_estudio;
 
 -- Consultas:
-    -- • Salas más reservadas
-SELECT nombre_sala, COUNT(nombre_sala) as cantidad
-FROM sala
-GROUP BY nombre_sala
-ORDER BY cantidad DESC
+-- Salas más reservadas (por cantidad de reservas)
+SELECT
+    r.nombre_sala,
+    r.edificio,
+    COUNT(*) AS cantidad_reservas
+FROM reserva r
+-- WHERE r.estado <> 'cancelada'
+GROUP BY r.nombre_sala, r.edificio
+ORDER BY cantidad_reservas DESC
 LIMIT 10;
 
+
+
     -- • Turnos mas demandados:
-SELECT t.id_turno, t.hora_inicio, t.hora_fin, COUNT(r.id_reserva) AS cantidad_reservas
+SELECT
+    t.id_turno,
+    t.hora_inicio,
+    t.hora_fin,
+    COUNT(r.id_reserva) AS cantidad_reservas
 FROM turno t
-LEFT JOIN reserva r ON r.id_turno = t.id_turno
+LEFT JOIN reserva r
+    ON r.id_turno = t.id_turno
+   AND r.estado <> 'cancelada'   -- no cuento calceladas.
 GROUP BY t.id_turno, t.hora_inicio, t.hora_fin
 ORDER BY cantidad_reservas DESC;
 
+
+
     -- Promedio de participantes por sala:
-SELECT 
-r.nombre_sala, 
-r.edificio, 
-ROUND(AVG(cantidad_personas), 2) AS promedio_participantes
+SELECT
+    sub.nombre_sala,
+    sub.edificio,
+    ROUND(AVG(sub.cantidad_personas), 2) AS promedio_participantes
 FROM (
-  SELECT 
-    r.id_reserva,
-    r.nombre_sala, 
-    r.edificio, 
-    COUNT(rp.ci_participante) AS cantidad_personas
-  FROM reserva r
-  LEFT JOIN reserva_participante rp ON rp.id_reserva = r.id_reserva
-  WHERE r.estado IN ('activa', 'finalizada')
-  GROUP BY r.id_reserva, r.nombre_sala, r.edificio
-) AS reservas_con_participantes
-GROUP BY nombre_sala, edificio
+    SELECT
+        r.id_reserva,
+        r.nombre_sala,
+        r.edificio,
+        COUNT(rp.ci_participante) AS cantidad_personas
+    FROM reserva r
+    LEFT JOIN reserva_participante rp
+        ON rp.id_reserva = r.id_reserva
+    WHERE r.estado IN ('activa', 'finalizada')
+    GROUP BY r.id_reserva, r.nombre_sala, r.edificio
+) AS sub
+GROUP BY sub.nombre_sala, sub.edificio
 ORDER BY promedio_participantes DESC;
+
 
 
     -- • Cantidad de reservas por carrera y facultad
@@ -45,13 +61,25 @@ JOIN facultad f ON p.id_facultad = f.id_facultad
 GROUP BY f.nombre, p.nombre_programa
 ORDER BY f.nombre, cantidad_reservas DESC;
 
-    -- • Porcentaje de ocupación de salas por edificio
-SELECT s.edificio, COUNT(DISTINCT r.id_reserva) AS reservas_realizadas,
-(COUNT(DISTINCT r.id_reserva) / (COUNT(s.nombre_sala) * COUNT(DISTINCT r.fecha) * COUNT(DISTINCT r.id_turno))) * 100 AS porcentaje_ocupacion_aprox
+
+
+    -- • Porcentaje de ocupación de salas por edificio (doy por hecho que el calculo es solo sobre los dias en los que hay al menos una reserva registrada).
+SELECT
+    s.edificio,
+    COUNT(DISTINCT r.id_reserva) AS reservas_realizadas,
+    COUNT(DISTINCT r.id_reserva) * 100.0 /
+    NULLIF(
+        (COUNT(DISTINCT s.nombre_sala) * COUNT(DISTINCT r.fecha) * COUNT(DISTINCT r.id_turno)),
+        0
+    ) AS porcentaje_ocupacion_aprox
 FROM sala s
-LEFT JOIN reserva r ON s.nombre_sala = r.nombre_sala AND s.edificio = r.edificio
+LEFT JOIN reserva r
+    ON s.nombre_sala = r.nombre_sala
+   AND s.edificio    = r.edificio
 GROUP BY s.edificio
 ORDER BY porcentaje_ocupacion_aprox DESC;
+
+
 
     -- • Cantidad de reservas y asistencias de profesores y alumnos (grado y posgrado)
 SELECT ppa.rol AS tipo_participante, pa.tipo AS nivel, COUNT(rp.id_reserva) AS cantidad_reservas,
@@ -74,7 +102,19 @@ JOIN programa_academico pa ON ppa.nombre_programa = pa.nombre_programa
 GROUP BY ppa.rol, pa.tipo
 ORDER BY ppa.rol, pa.tipo;
 
+
+
     -- • Porcentaje de reservas efectivamente utilizadas vs. canceladas/no asistidas
-SELECT estado, COUNT(*) AS cantidad, (COUNT(*) * 100.0 / (SELECT COUNT(*) FROM reserva)) AS porcentaje
+SELECT
+    CASE
+        WHEN estado = 'finalizada' THEN 'utilizada'
+        WHEN estado IN ('cancelada','sin_asistencia') THEN 'no_utilizada'
+        ELSE 'activa'
+    END AS categoria,
+    COUNT(*) AS cantidad,
+    ROUND(
+        COUNT(*) * 100.0 / (SELECT COUNT(*) FROM reserva),
+        2
+    ) AS porcentaje
 FROM reserva
-GROUP BY estado;
+GROUP BY categoria;

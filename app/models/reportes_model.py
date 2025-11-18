@@ -1,7 +1,7 @@
 from typing import List, Tuple, Any, Dict
 from app.db import execute_query
 
-# ==== helpers comunes ====
+# ==== infames helpers comunes ====
 
 def _paginacion(p: dict) -> tuple[int, int]:
     limit = int(p.get("limit", 50))
@@ -27,7 +27,7 @@ def _exec(sql: str, params: list[Any]) -> Tuple[List[str], List[list]]:
     data = [[r[c] for c in cols] for r in rows]
     return cols, data
 
-# =============== CONSULTAS ===============
+# =============== VAMOS CON LAS CONSULTAS ===============
 
 # 1) Salas más reservadas (por sala + edificio)
 def salas_mas_reservadas(p: dict) -> Tuple[List[str], List[list]]:
@@ -45,7 +45,7 @@ def salas_mas_reservadas(p: dict) -> Tuple[List[str], List[list]]:
     params.extend([limit, offset])
     return _exec(sql, params)
 
-# 2) Turnos más demandados
+# 2) Turnos mAs demandados
 def turnos_mas_demandados(p: dict) -> Tuple[List[str], List[list]]:
     limit, offset = _paginacion(p)
     where_fecha, params = _rango_fecha_and_params(p, "r")
@@ -64,7 +64,7 @@ def turnos_mas_demandados(p: dict) -> Tuple[List[str], List[list]]:
     params.extend([limit, offset])
     return _exec(sql, params)
 
-# 3) Ocupación por edificio (finalizadas/total)
+# 3) Ocupación por edificio (finalizadas/total), entiendase como: “De todas las reservas de ese edificio, qué porcentaje fueron efectivamente usadas (finalizadas)”.
 def ocupacion_por_edificio(p: dict) -> Tuple[List[str], List[list]]:
     limit, offset = _paginacion(p)
     where_fecha, params = _rango_fecha_and_params(p, "r")
@@ -83,7 +83,7 @@ def ocupacion_por_edificio(p: dict) -> Tuple[List[str], List[list]]:
     params.extend([limit, offset])
     return _exec(sql, params)
 
-# 4) Reservas por programa y facultad
+# 4) Reservas por carrera y facultad
 #    (participante -> participante_programa_academico -> programa_academico -> facultad)
 def reservas_por_programa_facultad(p: dict) -> Tuple[List[str], List[list]]:
     limit, offset = _paginacion(p)
@@ -136,8 +136,7 @@ def utilizadas_vs_canceladas_noasistidas(p: dict) -> Tuple[List[str], List[list]
 # 6) Sanciones por rol y tipo de programa (docente/alumno x grado/posgrado)
 def sanciones_por_rol_y_tipo_programa(p: dict) -> Tuple[List[str], List[list]]:
     limit, offset = _paginacion(p)
-    # El rango aplica sobre reservas relacionadas al sancionado si querés filtrar por edificio/fecha,
-    # pero sanción no tiene edificio/turno. Tomamos fecha_inicio de sanción como rango temporal.
+
     where_fecha, params = "", []
     if p.get("desde"):
         where_fecha += " s.fecha_inicio >= %s"
@@ -203,7 +202,7 @@ def promedio_participantes_por_sala(p: dict) -> Tuple[List[str], List[list]]:
     params.extend([limit, offset])
     return _exec(sql, params)
 
-# 8) Incidencias abiertas por sala y gravedad (orden consistente con tus services)
+# 8) Incidencias abiertas por sala y gravedad (orden consistente con mis services)
 def incidencias_abiertas_por_sala(p: dict):
     limit = int(p.get("limit", 50)); offset = int(p.get("offset", 0))
     where = ["i.estado <> 'resuelta'"]; params = []
@@ -215,6 +214,50 @@ def incidencias_abiertas_por_sala(p: dict):
       WHERE {' AND '.join(where)}
       GROUP BY i.nombre_sala, i.edificio, i.gravedad
       ORDER BY FIELD(i.gravedad,'alta','media','baja'), incidencias_abiertas DESC
+      LIMIT %s OFFSET %s
+    """
+    params.extend([limit, offset])
+    return _exec(sql, params)
+
+# X) Aniado esta que faltaba: Cantidad de reservas y asistencias de profesores y alumnos (grado y posgrado)
+def reservas_y_asistencias_por_rol_y_tipo_programa(p: dict) -> Tuple[List[str], List[list]]:
+    """
+    Cantidad de reservas y asistencias de profesores y alumnos (grado y posgrado).
+    Agrupa en:
+      - tipo_persona: 'docente' / 'alumno'
+      - tipo_programa: 'grado' / 'posgrado'
+    """
+    limit, offset = _paginacion(p)
+    where_fecha, params = _rango_fecha_and_params(p, "r")  # r.fecha
+
+    extra_where: list[str] = []
+    if p.get("facultad"):
+        extra_where.append("f.nombre = %s")
+        params.append(p["facultad"])
+    if p.get("edificio"):
+        extra_where.append("r.edificio = %s")
+        params.append(p["edificio"])
+
+    where_total = " AND ".join(filter(None, [where_fecha] + extra_where))
+    where_clause = "WHERE " + where_total if where_total else ""
+
+    sql = f"""
+      SELECT
+        CASE
+          WHEN ppa.rol = 'docente' THEN 'docente'
+          ELSE 'alumno'
+        END AS tipo_persona,
+        pa.tipo AS tipo_programa,   -- 'grado' / 'posgrado'
+        COUNT(*) AS cantidad_reservas,
+        SUM(CASE WHEN rp.asistencia = TRUE THEN 1 ELSE 0 END) AS cantidad_asistencias
+      FROM reserva_participante rp
+      JOIN reserva r ON r.id_reserva = rp.id_reserva
+      JOIN participante_programa_academico ppa ON ppa.ci_participante = rp.ci_participante
+      JOIN programa_academico pa ON pa.nombre_programa = ppa.nombre_programa
+      JOIN facultad f ON f.id_facultad = pa.id_facultad
+      {where_clause}
+      GROUP BY tipo_persona, pa.tipo
+      ORDER BY tipo_persona, pa.tipo
       LIMIT %s OFFSET %s
     """
     params.extend([limit, offset])
@@ -297,7 +340,7 @@ def estado_salas_resumen(p: dict):
         """
         cols, rows = _exec(sql, [limit, offset])
         if rows:
-            # agregar columna calculada = manual (mismo comportamiento que tu helper)
+            # agregar columna calculada = manual (mismo comportamiento que mi helper)
             idx = {c:i for i,c in enumerate(cols)}
             if "estado_calculado" not in cols:
                 cols = cols + ["estado_calculado"]

@@ -10,8 +10,10 @@ ConsultaID = Literal[
     "OCUPACION_POR_EDIFICIO",
     "RESERVAS_POR_PROGRAMA_FACULTAD",
     "UTILIZADAS_VS_CANCELADAS_NOASISTIDAS",
+    "RESERVAS_Y_ASISTENCIAS_POR_ROL_Y_TIPO_PROGRAMA",
     "SANCIONES_POR_ROL_Y_TIPO_PROGRAMA",
     "PROMEDIO_PARTICIPANTES_POR_SALA",
+
 
     # Consultas propias (incidencias/alertas/estado):
     "INCIDENCIAS_ABIERTAS_POR_SALA",
@@ -55,6 +57,7 @@ def ejecutar_consulta(consulta: ConsultaID, params: ReporteParams):
         "UTILIZADAS_VS_CANCELADAS_NOASISTIDAS": reportes_model.utilizadas_vs_canceladas_noasistidas,
         "SANCIONES_POR_ROL_Y_TIPO_PROGRAMA": reportes_model.sanciones_por_rol_y_tipo_programa,
         "PROMEDIO_PARTICIPANTES_POR_SALA": reportes_model.promedio_participantes_por_sala,
+        "RESERVAS_Y_ASISTENCIAS_POR_ROL_Y_TIPO_PROGRAMA": reportes_model.reservas_y_asistencias_por_rol_y_tipo_programa,
 
         # Propias:
         "INCIDENCIAS_ABIERTAS_POR_SALA": reportes_model.incidencias_abiertas_por_sala,
