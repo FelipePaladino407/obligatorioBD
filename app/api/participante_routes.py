@@ -64,28 +64,28 @@ def actualizar(ci: str):
 @participante_bp.get("/me")
 @required_token
 def mis_datos():
-    """
-    Devuelve los datos del usuario logueado, usando el correo extraído del JWT.
-    """
     correo = getattr(request, "correo", None)
-    if not correo:
-        return jsonify({"error": "No se pudo determinar el usuario a partir del token"}), 401
 
-    # Consultamos la BD
-    row = obtener_datos_participante_por_correo(correo)
+    if not correo:
+        return jsonify({"error": "No se pudo obtener el correo del token"}), 401
+
+    try:
+        row = obtener_datos_participante_por_correo(correo)
+    except Exception as e:
+        return jsonify({"error": f"Error consultando BD: {e}"}), 500
+
     if not row:
         return jsonify({"error": "Participante no encontrado"}), 404
 
-    payload = {
+    return jsonify({
         "ci": row["ci"],
         "nombre": row["nombre"],
         "apellido": row["apellido"],
         "email": row["email"],
         "carrera": row.get("carrera"),
-        "tipo_programa": row.get("tipo_programa"),   # grado / posgrado
-        "rol": row.get("rol"),                       # estudiante/docente/etc
+        "tipo_programa": row.get("tipo_programa"),
+        "rol": row.get("rol"),
         "facultad": row.get("facultad"),
-    }
+    }), 200
 
-    return jsonify(payload), 200
 
