@@ -29,17 +29,25 @@ def get_reservas():
 def create():
     data = request.get_json(force=True)
     reserva = ReservaCreate(
+            participantes_ci=data["participantes_ci"],
             nombre_sala=data["nombre_sala"],
             edificio=data["edificio"],
             fecha=data["fecha"],
             id_turno=data["id_turno"],
             estado=data["estado"],
             )
-    create_reserva(reserva)
-    return jsonify({"message": "eguro, ahi va"}), 201
+    try:
+        create_reserva(reserva)
+        return jsonify({"message": "Reserva creada"}), 201
+    except Exception as e:
+        return jsonify({"error": f"{str(e)}"}), 500
 
 @reserva_bp.delete("/<int:id>")
 @required_token
 def remove(id: int):
-    remove_reserva(id)
-    return jsonify({"message": "Reserva eliminada"}), 200
+    try:
+        pass
+        remove_reserva(id)
+        return jsonify({"message": "Reserva eliminada"}), 200
+    except Exception as e:
+        return jsonify({"error": f"{str(e)}"}), 500

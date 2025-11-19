@@ -12,6 +12,12 @@ from app.services.sala_service import get_sala, get_tipo_sala
 
 
 def create_reserva(r: ReservaCreate) -> None:
+    # valida capacidad y roles
+    validar_capacidad(r)
+    validar_participantes_rol_sala(r)
+    # valida límites (solo aplican a estudiantes de grado)
+    validar_cantidad_reservas(r)
+
     # crea la reserva y obtener el id generado (muy importante)
     query_reserva = """
     INSERT INTO reserva (nombre_sala, edificio, fecha, id_turno, estado)
@@ -22,17 +28,8 @@ def create_reserva(r: ReservaCreate) -> None:
         r.edificio,
         r.fecha,
         r.id_turno,
-        r.estado.value,
+        r.estado,
     )
-
-    validar_capacidad(r)
-    validar_participantes_rol_sala(r)
-    # OJO -> FALTA: 
-    # 4. Validar límites (solo grado):
-    #       - máximo 2 horas por día
-    #       - máximo 3 reservas activas por semana
-    # 5. Si todo OK -> insertar reserva
-    # 6. Insertar reserva_participante para cada CI
 
     id_reserva = execute_returning_id(query_reserva, params_reserva)
 
@@ -124,6 +121,64 @@ def validar_capacidad(r: ReservaCreate):
 
     if len(r.participantes_ci) > cap:
         raise error("Son muchos, vayanse")
+
+
+def validar_cantidad_reservas(r: ReservaCreate):
+    """
+    Verifica límites para participantes 'estudiante_grado':
+      - máximo 2 horas por día (equivale a 2 turnos por día)
+      - máximo 3 reservas activas por semana
+
+    Implementación:
+      - Para cada participante que sea 'estudiante_grado' se consultan 
+      las reservas activas existentes en la misma fecha (día) y en la misma semana.
+      - Como cada turno es 1 hora, 1 reserva = 1 hora. (eguro)
+      - Si al sumar la nueva reserva se excede el límite, tira un error fatal mortal.
+    """
+
+    daily_query = """
+    SELECT COUNT(*) AS cnt
+    FROM reserva rs
+    JOIN reserva_participante rp ON rs.id_reserva = rp.id_reserva
+    WHERE rp.ci_participante = %s
+      AND rs.fecha = %s
+      AND rs.estado = 'activa';
+    """
+
+    weekly_query = """
+    SELECT COUNT(*) AS cnt
+    FROM reserva rs
+    JOIN reserva_participante rp ON rs.id_reserva = rp.id_reserva
+    WHERE rp.ci_participante = %s
+      AND YEARWEEK(rs.fecha, 3) = YEARWEEK(%s, 3)
+      AND rs.estado = 'activa';
+    """
+
+    for ci in r.participantes_ci:
+        rol = get_participante_rol(ci)
+        # solo aplico límites a estudiantes de grado
+        if rol != "estudiante_grado":
+            # dale nomá
+            continue
+
+        # conteo diario (solución inteligente)
+        res_daily = execute_query(daily_query, (ci, r.fecha), fetch=True)
+        daily_cnt = 0
+        if res_daily:
+            daily_cnt = int(res_daily[0]["cnt"])
+
+        # cada reserva añade 1 turno (1 hora), por eso compruebo +1
+        if daily_cnt + 1 > 2:
+            raise error(f"El participante {ci} superaría las 2 horas en la fecha {r.fecha} (ya tiene {daily_cnt}).")
+
+        # conteo semanal (solo reservas activas)
+        res_weekly = execute_query(weekly_query, (ci, r.fecha), fetch=True)
+        weekly_cnt = 0
+        if res_weekly:
+            weekly_cnt = int(res_weekly[0]["cnt"])
+
+        if weekly_cnt + 1 > 3:
+            raise error(f"El participante {ci} superaría las 3 reservas activas en la semana de {r.fecha} (ya tiene {weekly_cnt}).")
 
 # def validar_cantidad_reservas(r: ReservaCreate):
 #     raise error("pa")
