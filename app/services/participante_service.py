@@ -75,3 +75,33 @@ def get_participante_rol(ci: str) -> tipo_usuario.TipoUsuario:
     rol: List[Dict[str, Any]] = execute_query(query, params, fetch=True);
     return cast(tipo_usuario.TipoUsuario, rol[0]["rol"])
 
+# Agrego para obtener los datos del usuario (Para: FrontEnd BlackMan)
+def obtener_datos_participante_por_correo(correo: str) -> Optional[Dict[str, Any]]:
+    """
+    Devuelve los datos del participante (mis datos) a partir del correo.
+    Incluye programa, facultad y rol si existe esa info.
+    """
+    sql = """
+        SELECT 
+            p.ci,
+            p.nombre,
+            p.apellido,
+            p.email,
+            pa.nombre_programa      AS carrera,
+            pa.tipo                 AS tipo_programa,   -- 'grado' / 'posgrado'
+            ppa.rol,                                   -- 'estudiante_grado', 'docente', etc.
+            f.nombre               AS facultad
+        FROM participante p
+        LEFT JOIN participante_programa_academico ppa
+            ON p.ci = ppa.ci_participante
+        LEFT JOIN programa_academico pa
+            ON pa.nombre_programa = ppa.nombre_programa
+        LEFT JOIN facultad f
+            ON f.id_facultad = pa.id_facultad
+        WHERE p.email = %s
+        LIMIT 1;
+    """
+    rows = execute_query(sql, (correo,), fetch=True)
+    if not rows:
+        return None
+    return rows[0]

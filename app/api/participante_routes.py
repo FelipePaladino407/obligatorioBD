@@ -1,6 +1,10 @@
 from app.auth import required_token, admin_required
 from app.models.participante_model import ParticipanteCreate, ParticipanteRow, ParticipanteUpdate
-from app.services.participante_service import create_participante, eliminar_participante, listar_participantes, update_participante
+from app.services.participante_service import create_participante, 
+eliminar_participante,
+listar_participantes,
+update_participante,
+obtener_datos_participante_por_correo
 from flask import Blueprint, jsonify, request
 
 participante_bp = Blueprint("participante", __name__)
@@ -46,3 +50,29 @@ def actualizar(ci: str):
     update_participante(participante_update)
     return jsonify({"message": "Participante actualizado correctamente"}), 200
 
+# Para FronTend BlackMan:
+@participante_bp.get("/me")
+@required_token
+def mis_datos():
+    """
+    Devuelve los datos del usuario logueado, usando el correo del JWT.
+    """
+    correo = getattr(request, "id_usuario", None)
+    if not correo:
+        return jsonify({"error": "No se pudo determinar el usuario a partir del token"}), 401
+
+    row = obtener_datos_participante_por_correo(correo)
+    if not row:
+        return jsonify({"error": "Participante no encontrado"}), 404
+
+    payload = {
+        "ci": row["ci"],
+        "nombre": row["nombre"],
+        "apellido": row["apellido"],
+        "email": row["email"],
+        "carrera": row.get("carrera"),
+        "tipo_programa": row.get("tipo_programa"),   # grado / posgrado
+        "rol": row.get("rol"),                      # estudiante_grado / docente / etc
+        "facultad": row.get("facultad"),
+    }
+    return jsonify(payload), 200
