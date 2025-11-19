@@ -1,4 +1,4 @@
-from app.auth import required_token
+from app.auth import required_token, admin_required
 from app.models.participante_model import ParticipanteCreate, ParticipanteRow, ParticipanteUpdate
 from app.services.participante_service import create_participante, eliminar_participante, listar_participantes, update_participante
 from flask import Blueprint, jsonify, request
@@ -11,7 +11,7 @@ def listar():
     return jsonify(participantes)
 
 @participante_bp.post("/")
-@required_token
+@admin_required
 def crear():
     data = request.get_json(force=True)
     participante = ParticipanteCreate(
@@ -25,7 +25,7 @@ def crear():
 
 
 @participante_bp.delete("/<string:ci>")
-@required_token
+@admin_required
 def eliminar(ci: str):
     eliminar_participante(ci)
     return jsonify({"message": "Participante eliminado"}), 200
@@ -34,7 +34,7 @@ def eliminar(ci: str):
 
 
 @participante_bp.patch("/<string:ci>")
-@required_token
+@admin_required
 def actualizar(ci: str):
     data = request.get_json(force=True)
     participante_update = ParticipanteUpdate(

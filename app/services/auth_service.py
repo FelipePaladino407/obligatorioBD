@@ -8,7 +8,7 @@ def verify_user(correo: str, contrasena: str) -> Optional[Dict[str, Any]]:
     Solo para desarrollo: compara texto plano, no hashes.
     """
     query: str = """
-        SELECT correo, contrasena 
+        SELECT correo, contrasena, isAdmin 
         FROM login 
         WHERE correo = %s;
     """

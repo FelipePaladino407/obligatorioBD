@@ -16,6 +16,7 @@ def login():
     if not user:
         return jsonify({"error": "Credenciales inválidas"}), 401
 
-    token = generate_token(id_usuario=user["correo"])
-    return jsonify({"token": token}), 200
+    is_admin = bool(user["isAdmin"])
 
+    token = generate_token(correo=user["correo"], is_admin=is_admin)
+    return jsonify({"token": token}), 200

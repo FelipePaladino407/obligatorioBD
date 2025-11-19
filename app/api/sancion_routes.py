@@ -3,6 +3,7 @@ from typing import List
 from flask import Blueprint, jsonify, request
 
 from app.auth import required_token
+from app.auth import admin_required
 from app.models.sancion_model import SancionCreate
 from app.services.sancion_service import crear_sancion, listar_sanciones
 
@@ -15,7 +16,7 @@ def list():
     return jsonify(sanciones)
 
 @sancion_bp.post("/")
-@required_token
+@admin_required
 def create():
     data = request.get_json(force=True)
     sancion = SancionCreate(
