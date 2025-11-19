@@ -1,10 +1,6 @@
 from app.auth import required_token, admin_required
 from app.models.participante_model import ParticipanteCreate, ParticipanteRow, ParticipanteUpdate
-from app.services.participante_service import create_participante, 
-eliminar_participante,
-listar_participantes,
-update_participante,
-obtener_datos_participante_por_correo
+from app.services.participante_service import create_participante, eliminar_participante, listar_participantes, update_participante, obtener_datos_participante_por_correo
 from flask import Blueprint, jsonify, request
 
 participante_bp = Blueprint("participante", __name__)
@@ -24,17 +20,21 @@ def crear():
         apellido=data["apellido"],
         email=data["email"],
     )
-    create_participante(participante)
-    return jsonify({"message": "Participante creado"}), 201
+    try:
+        create_participante(participante)
+        return jsonify({"message": "Participante creado"}), 201
+    except Exception as e:
+        return jsonify({"error": f"{str(e)}"}), 500
 
 
 @participante_bp.delete("/<string:ci>")
 @admin_required
 def eliminar(ci: str):
-    eliminar_participante(ci)
-    return jsonify({"message": "Participante eliminado"}), 200
-
-
+    try:
+        eliminar_participante(ci)
+        return jsonify({"message": "Participante eliminado"}), 200
+    except Exception as e:
+        return jsonify({"error": f"{str(e)}"}), 500
 
 
 @participante_bp.patch("/<string:ci>")
@@ -47,8 +47,11 @@ def actualizar(ci: str):
         apellido=data.get("apellido"),
         email=data.get("email"),
     )
-    update_participante(participante_update)
-    return jsonify({"message": "Participante actualizado correctamente"}), 200
+    try:
+        update_participante(participante_update)
+        return jsonify({"message": "Participante actualizado correctamente"}), 200
+    except Exception as e:
+        return jsonify({"error": f"{str(e)}"}), 500
 
 # Para FronTend BlackMan:
 @participante_bp.get("/me")

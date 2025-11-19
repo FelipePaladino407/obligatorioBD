@@ -1,4 +1,4 @@
-from typing import Any, Dict, List, cast
+from typing import Any, Dict, List, Optional, cast
 from app.enums import tipo_usuario
 from app.models.participante_model import ParticipanteCreate, ParticipanteRow, ParticipanteUpdate
 from app.db import execute_query

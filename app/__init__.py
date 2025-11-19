@@ -16,5 +16,5 @@ def create_app() -> Flask:
     app.register_blueprint(sancion_bp, url_prefix="/api/v1/sancion")
     app.register_blueprint(auth_bp, url_prefix="/api/v1/auth")
     app.register_blueprint(sala_bp, url_prefix="/api/v1/sala")
-    app.register_blueprint(reportes_bp)
+    app.register_blueprint(reportes_bp, url_prefix="/api/v1/reportes")
     return app
