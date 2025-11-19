@@ -36,10 +36,9 @@ def required_token(func: Callable[..., Any]) -> Callable[..., Any]:
         try:
             data = jwt.decode(token, Config.SECRET_KEY, algorithms=["HS256"])
 
-            # Lo que sacamos del token queda colgado en el request
+            request.correo = data.get("correo")  # USO 'correo'
             request.user_email = data.get("correo")
             request.is_admin = bool(data.get("is_admin", False))
-
         except jwt.ExpiredSignatureError:
             return jsonify({"error": "Token vencido"}), 401
         except jwt.InvalidTokenError:
@@ -63,3 +62,6 @@ def admin_required(func: Callable[..., Any]) -> Callable[..., Any]:
             return jsonify({"error": "quien sos"}), 403
         return func(*args, **kwargs)
     return wrapper
+
+# Por si acaso:  request.user_email = data.get("correo")   # esto es viejo
+#             request.is_admin = bool(data.get("is_admin", False))
