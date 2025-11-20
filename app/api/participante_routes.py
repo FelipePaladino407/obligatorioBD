@@ -1,4 +1,5 @@
 from app.auth import required_token, admin_required
+from app.db import execute_query
 from app.models.participante_model import ParticipanteCreate, ParticipanteRow, ParticipanteUpdate
 from app.services.participante_service import (
     create_participante,
@@ -17,19 +18,32 @@ def listar():
     participantes = listar_participantes()
     return jsonify(participantes)
 
+
 @participante_bp.post("/")
 @admin_required
 def crear():
     data = request.get_json(force=True)
+
     participante = ParticipanteCreate(
         ci=data["ci"],
         nombre=data["nombre"],
         apellido=data["apellido"],
         email=data["email"],
     )
+
     try:
+        # 1) crear participante
         create_participante(participante)
-        return jsonify({"message": "Participante creado"}), 201
+
+        # 2) crear login
+        sql_login = """
+            INSERT INTO login (correo, contrasena, isAdmin)
+            VALUES (%s, %s, false);
+        """
+        execute_query(sql_login, (participante.email, data["password"]), fetch=False)
+
+        return jsonify({"message": "Participante + login creados"}), 201
+
     except Exception as e:
         return jsonify({"error": f"{str(e)}"}), 500
 

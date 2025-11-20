@@ -1,6 +1,11 @@
 from datetime import date
 from re import error
 from typing import Dict, List, cast
+
+from flask import jsonify, request
+
+from app import reserva_bp
+from app.auth import required_token
 from app.db import execute_query, execute_returning_id
 from app.enums.tipo_sala import TipoSala
 from app.enums.tipo_usuario import TipoUsuario
@@ -182,3 +187,77 @@ def validar_cantidad_reservas(r: ReservaCreate):
 
 # def validar_cantidad_reservas(r: ReservaCreate):
 #     raise error("pa")
+
+
+def list_reservas_usuario(correo: str):
+    """
+    Devuelve todas las reservas en las que participa un usuario,
+    usando su correo → CI → reservas.
+    """
+    sql_ci = "SELECT ci FROM participante WHERE email = %s"
+    rows_ci = execute_query(sql_ci, (correo,), fetch=True)
+    if not rows_ci:
+        return []
+
+    ci = rows_ci[0]["ci"]
+
+    query = """
+        SELECT r.id_reserva, r.nombre_sala, r.edificio, r.fecha, r.id_turno, r.estado
+        FROM reserva r
+        JOIN reserva_participante rp ON rp.id_reserva = r.id_reserva
+        WHERE rp.ci_participante = %s
+        ORDER BY r.fecha DESC;
+    """
+    result = execute_query(query, (ci,), fetch=True)
+    return cast(List[ReservaRow], result)
+
+
+@reserva_bp.patch("/<int:id>/cancelar")
+@required_token
+def cancelar_mia(id: int):
+    correo = getattr(request, "correo", None)
+    if not correo:
+        return jsonify({"error": "No se pudo obtener usuario del token"}), 401
+
+    try:
+        cancelar_reserva_usuario(id, correo)
+    except PermissionError as e:
+        return jsonify({"error": str(e)}), 403
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify({"message": "Reserva cancelada correctamente"}), 200
+
+
+def cancelar_reserva_usuario(id_reserva: int, correo: str):
+    """
+    Cancela una reserva solo si:
+    - El usuario participa en ella
+    - La reserva está activa
+    """
+    sql_ci = "SELECT ci FROM participante WHERE email = %s"
+    rows_ci = execute_query(sql_ci, (correo,), fetch=True)
+    if not rows_ci:
+        raise PermissionError("Usuario no encontrado")
+
+    ci = rows_ci[0]["ci"]
+
+    # Verificar que es participante
+    sql_check = """
+        SELECT r.estado
+        FROM reserva r
+        JOIN reserva_participante rp ON rp.id_reserva = r.id_reserva
+        WHERE r.id_reserva = %s AND rp.ci_participante = %s;
+    """
+    rows = execute_query(sql_check, (id_reserva, ci), fetch=True)
+
+    if not rows:
+        raise PermissionError("No puedes modificar una reserva que no es tuya")
+
+    estado = rows[0]["estado"]
+    if estado != "activa":
+        raise PermissionError(f"La reserva no está activa (estado={estado})")
+
+    # Cancelar
+    sql_cancel = "UPDATE reserva SET estado = 'cancelada' WHERE id_reserva = %s;"
+    execute_query(sql_cancel, (id_reserva,), fetch=False)
