@@ -50,6 +50,19 @@ CREATE TABLE login (
     ON UPDATE CASCADE ON DELETE RESTRICT
 );
 
+CREATE TABLE sesion_login (
+  id            CHAR(36) PRIMARY KEY,            -- UUID v4 en texto
+  correo        VARCHAR(120) NOT NULL,
+  creado_en     DATETIME NOT NULL DEFAULT CURRENT_TIMESTAMP,
+  expiracion    DATETIME NOT NULL,
+  revocado      BOOLEAN NOT NULL DEFAULT FALSE,
+  CONSTRAINT fk_sesion_login_correo
+    FOREIGN KEY (correo) REFERENCES login(correo)
+    ON UPDATE CASCADE ON DELETE CASCADE,
+  INDEX idx_sesion_login_correo (correo)
+);
+
+
 CREATE TABLE participante_programa_academico (
   id_alumno_programa  BIGINT AUTO_INCREMENT PRIMARY KEY,   -- Pongo BigInt porque asumo que las reservas se van a ir acumulando año tras año.
   ci_participante      VARCHAR(8) NOT NULL,
