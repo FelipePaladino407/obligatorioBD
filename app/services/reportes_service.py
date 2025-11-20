@@ -70,10 +70,14 @@ def ejecutar_consulta(consulta: ConsultaID, params: ReporteParams):
         raise ValueError("id_consulta inválido")
 
     columns, rows = DISPATCH[consulta](p)
+
+    # CAMBI0:
+    items = [dict(zip(columns, row)) for row in rows]
+
     return {
         "consulta_id": consulta,
         "params": p,
-        "columns": columns,
-        "rows": rows,
-        "count": len(rows),
+        "count": len(items),
+        "columns": columns,   # OPCIONAL ESTO, por si el frontend quiere usarlas
+        "data": items,        # / ver en Postman
     }
