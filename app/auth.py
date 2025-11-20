@@ -20,10 +20,6 @@ def generate_token(correo: str, is_admin: bool) -> str:
     """
     exp_dt = datetime.utcnow() + timedelta(hours=2)
 
-    # OPCIONAL: si querés permitir solo una sesión activa por usuario,
-    # podés revocar todas las anteriores acá:
-    # execute_query("UPDATE sesion_login SET revocado = TRUE WHERE correo=%s;", (correo,), fetch=False)
-
     sesion_id = _crear_sesion_en_bd(correo, exp_dt)
 
     payload = {
@@ -60,7 +56,7 @@ def required_token(func: Callable[..., Any]) -> Callable[..., Any]:
             if not _sesion_valida(sesion_id, correo):
                 return jsonify({"error": "Sesión inválida o cerrada"}), 401
 
-            # Guardamos cosas útiles en request
+            # Guardamos cosas útiles en request: AAAAAA
             request.correo = correo
             request.user_email = correo
             request.is_admin = bool(data.get("is_admin", False))
