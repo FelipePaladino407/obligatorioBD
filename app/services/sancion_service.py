@@ -53,3 +53,19 @@ def tiene_sancion_activa(ci: str, en_fecha: date) -> bool:
     """
     rows: List[Dict] = execute_query(query, (ci, en_fecha), fetch=True)
     return len(rows) > 0
+
+def listar_sanciones_por_correo(correo: str) -> List[SancionRow]:
+    """
+    Devuelve las sanciones de un usuario a partir de su correo (login).
+    1) Busca el CI del participante con ese correo.
+    2) Reutiliza listar_sanciones_por_participante(ci).
+    """
+    sql_ci = "SELECT ci FROM participante WHERE email = %s LIMIT 1;"
+    rows_ci: List[Dict[str, Any]] = execute_query(sql_ci, (correo,), fetch=True)
+
+    if not rows_ci:
+        # No hay participante con ese correo
+        return []
+
+    ci = rows_ci[0]["ci"]
+    return listar_sanciones_por_participante(ci)
