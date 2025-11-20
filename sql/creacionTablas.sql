@@ -1,5 +1,3 @@
-Script Completo SQL
-
 -- Crear database:
 
 CREATE DATABASE reservas_salas_estudio

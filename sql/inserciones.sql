@@ -1,3 +1,27 @@
+-- Permisos:
+
+
+CREATE USER 'app_user'@'%' IDENTIFIED BY 'obligatorio1234';
+
+GRANT
+    SELECT,
+    INSERT,
+    UPDATE,
+    DELETE
+ON
+    reservas_salas_estudio.*
+TO
+    'app_user'@'%';
+
+GRANT
+    SELECT
+ON
+    reservas_salas_estudio.vista_estado_sala
+TO
+    'app_user'@'%';
+
+FLUSH PRIVILEGES;
+
 -- Inserciones:
 
 
