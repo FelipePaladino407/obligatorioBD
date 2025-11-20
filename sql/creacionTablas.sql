@@ -1,12 +1,10 @@
 -- Crear database:
 
-CREATE DATABASE reservas_salas_estudio
-CHARACTER SET utf8mb4
-COLLATE utf8mb4_general_ci;
+CREATE DATABASE IF NOT EXISTS reservas_salas_estudio
+    CHARACTER SET utf8mb4
+    COLLATE utf8mb4_general_ci;
 
 USE reservas_salas_estudio;
-
-
 
 -- Crear tablas: 
 

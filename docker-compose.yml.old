@@ -1,0 +1,20 @@
+version: '3.8'
+
+services:
+
+  # Servicio Web (Aplicación Flask)
+  web:
+    build: . # Usa el Dockerfile en el directorio actual
+    container_name: flask_backend
+    restart: always
+    ports:
+      # Mapea el puerto 5000 del contenedor al puerto 8080 del host
+      - "8080:5000"
+    # Carga variables de entorno desde el archivo .env
+    env_file:
+      - .env
+    # Si quieres hot-reloading para desarrollo, descomenta el siguiente 'volumes':
+    # volumes:
+    #   - .:/usr/src/app
+
+# No se definen volúmenes ni otros servicios, ya que MySQL es externo.

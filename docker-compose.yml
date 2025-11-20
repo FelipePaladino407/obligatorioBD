@@ -1,20 +1,45 @@
 version: '3.8'
 
 services:
+  db:
+    image: mysql:8.0
+    container_name: flask_mysql_local
+    restart: always
+    environment:
+      MYSQL_ROOT_PASSWORD: sudafrica2010 
+      MYSQL_DATABASE: reservas_salas_estudio 
+      MYSQL_USER: user
+      MYSQL_PASSWORD: mexico70
+    volumes:
+      - mysql_local_data:/var/lib/mysql
+      
+      # --- CARGA DE SCRIPTS SQL ---
+      # 1. Crear tablas primero
+      - ./sql/creacionTablas.sql:/docker-entrypoint-initdb.d/01_creacion.sql
+      # 2. Insertar datos después
+      - ./sql/inserciones.sql:/docker-entrypoint-initdb.d/02_inserciones.sql 
+      - ./mysql/my.cnf:/etc/mysql/conf.d/my.cnf
+      
+    ports:
+      - "3306:3306"
+    
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password_segura"]
+      timeout: 10s
+      retries: 10
+      start_period: 10s
 
-  # Servicio Web (Aplicación Flask)
   web:
-    build: . # Usa el Dockerfile en el directorio actual
+    build: . 
     container_name: flask_backend
     restart: always
     ports:
-      # Mapea el puerto 5000 del contenedor al puerto 8080 del host
       - "8080:5000"
-    # Carga variables de entorno desde el archivo .env
     env_file:
       - .env
-    # Si quieres hot-reloading para desarrollo, descomenta el siguiente 'volumes':
-    # volumes:
-    #   - .:/usr/src/app
+    depends_on:
+      db:
+        condition: service_healthy
 
-# No se definen volúmenes ni otros servicios, ya que MySQL es externo.
+volumes:
+  mysql_local_data:
