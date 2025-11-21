@@ -50,7 +50,6 @@ def create():
 @admin_required
 def remove(id: int):
     try:
-        pass
         remove_reserva(id)
         return jsonify({"message": "Reserva eliminada por admin"}), 200
     except Exception as e:
