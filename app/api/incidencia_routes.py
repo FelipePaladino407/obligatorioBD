@@ -22,7 +22,7 @@ def crear():
 
     data = request.get_json(force=True)
 
-    # 1) Buscar CI por correo
+    # Buscar CI por correo
     sql_ci = "SELECT ci FROM participante WHERE email = %s LIMIT 1;"
     rows_ci = execute_query(sql_ci, (correo,), fetch=True)
 
@@ -31,7 +31,6 @@ def crear():
 
     ci_reportante = rows_ci[0]["ci"]
 
-    # 2) Construir el modelo de incidencia (OJO: sin coma al final)
     incidencia = IncidenciaCreate(
         nombre_sala=data["nombre_sala"],
         edificio=data["edificio"],
@@ -42,10 +41,10 @@ def crear():
         id_reserva=data.get("id_reserva"),
     )
 
-    # 3) Crear incidencia en la BD
+    # Crear incidencia en la BD
     id_incidencia = crear_incidencia(incidencia)
 
-    # 4) Propagar alertas a reservas futuras según gravedad
+    # Propagar alertas a reservas futuras según gravedad
     mensaje_base = f"Incidencia reportada: {incidencia.descripcion}"
     creadas = propagar_alertas_por_incidencia(
         id_incidencia=id_incidencia,
