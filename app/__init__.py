@@ -6,6 +6,7 @@ from app.api.reserva_routes import reserva_bp
 from app.api.sancion_routes import sancion_bp
 from app.api.reportes_routes import reportes_bp
 from app.api.sala_routes import sala_bp
+from app.api.edificio_routes import edificio_bp
 
 
 def create_app() -> Flask:
@@ -17,4 +18,5 @@ def create_app() -> Flask:
     app.register_blueprint(auth_bp, url_prefix="/api/v1/auth")
     app.register_blueprint(sala_bp, url_prefix="/api/v1/sala")
     app.register_blueprint(reportes_bp, url_prefix="/api/v1/reportes")
+    app.register_blueprint(edificio_bp, url_prefix="/api/v1/edificio")
     return app
