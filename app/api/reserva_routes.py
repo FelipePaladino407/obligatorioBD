@@ -31,20 +31,39 @@ def get_reservas():
 @reserva_bp.post("/")
 @required_token
 def create():
-    data = request.get_json(force=True)
+    data = request.get_json(force=True) or {}
+
+    # Validar que vengan todas las claves necesarias
+    required_fields = ["nombre_sala", "edificio", "fecha", "id_turno", "participantes_ci"]
+    missing = [f for f in required_fields if f not in data]
+
+    if missing:
+        return jsonify({
+            "error": f"Faltan campos obligatorios en el body: {', '.join(missing)}"
+        }), 400
+
+    force = data.get("force", False)
+
     reserva = ReservaCreate(
-            participantes_ci=data["participantes_ci"],
-            nombre_sala=data["nombre_sala"],
-            edificio=data["edificio"],
-            fecha=data["fecha"],
-            id_turno=data["id_turno"],
-            estado=data["estado"],
-            )
+        nombre_sala=data["nombre_sala"],
+        edificio=data["edificio"],
+        fecha=data["fecha"],
+        id_turno=data["id_turno"],
+        estado="activa",
+        participantes_ci=data["participantes_ci"]
+    )
+
     try:
-        create_reserva(reserva)
-        return jsonify({"message": "Reserva creada"}), 201
+        id_res = create_reserva(reserva, force)
+        return jsonify({"message": "Reserva creada", "id_reserva": id_res}), 201
+
+    except Warning as w:
+        return jsonify(w.args[0]), 409
+
     except Exception as e:
-        return jsonify({"error": f"{str(e)}"}), 500
+        return jsonify({"error": str(e)}), 400
+
+
 
 @reserva_bp.delete("/<int:id>")
 @admin_required
