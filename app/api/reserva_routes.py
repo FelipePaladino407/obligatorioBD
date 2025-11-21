@@ -1,5 +1,5 @@
 from flask import Blueprint, jsonify, request
-from app.auth import required_token
+from app.auth import required_token, admin_required
 from app.models.reserva_model import ReservaCreate
 from app.services.reserva_service import create_reserva, list_reservas, remove_reserva, list_reservas_usuario, \
     cancelar_reserva_usuario
@@ -44,12 +44,12 @@ def create():
         return jsonify({"error": f"{str(e)}"}), 500
 
 @reserva_bp.delete("/<int:id>")
-@required_token
+@admin_required
 def remove(id: int):
     try:
         pass
         remove_reserva(id)
-        return jsonify({"message": "Reserva eliminada"}), 200
+        return jsonify({"message": "Reserva eliminada por admin"}), 200
     except Exception as e:
         return jsonify({"error": f"{str(e)}"}), 500
 
