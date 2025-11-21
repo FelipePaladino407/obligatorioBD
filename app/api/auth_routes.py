@@ -1,10 +1,8 @@
 # app/routes/auth_routes.py
 from flask import Blueprint, request, jsonify
 from app.auth import generate_token, required_token, revocar_sesion  # aniado lo del toquen requerido y lo de revocar secion.
-import bcrypt
 
-from app.db import execute_query
-from app.services.auth_service import verify_user
+from app.services.auth_service import verify_user, cambiar_contrasena_service
 
 auth_bp = Blueprint("auth", __name__)
 
@@ -54,14 +52,10 @@ def cambiar_contrasena():
     if not correo:
         return jsonify({"error": "No se pudo obtener el usuario"}), 401
 
-    # buscar contraseña existente
-    sql_get = "SELECT contrasena FROM login WHERE correo = %s"
-    row = execute_query(sql_get, (correo,), fetch=True)
-
-    if not row or row[0]["contrasena"] != actual:
-        return jsonify({"error": "Contraseña actual incorrecta"}), 403
-
-    sql_update = "UPDATE login SET contrasena = %s WHERE correo = %s"
-    execute_query(sql_update, (nueva, correo), fetch=False)
-
-    return jsonify({"message": "Contraseña actualizada correctamente"}), 200
+    try:
+        cambiar_contrasena_service(correo, actual, nueva)
+        return jsonify({"message": "Contraseña actualizada correctamente"}), 200
+    except PermissionError as e:
+        return jsonify({"error": str(e)}), 403
+    except Exception as e:
+        return jsonify({"error": f"Error: {str(e)}"}), 500

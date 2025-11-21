@@ -15,18 +15,69 @@ from app.services.participante_service import get_participante_rol
 from app.services.sala_service import get_sala, get_tipo_sala
 
 
-def create_reserva(r: ReservaCreate) -> None:
-    # valida capacidad y roles
+def create_reserva(r: ReservaCreate, force: bool = False) -> int:
+    """
+    Crea una reserva con validaciones:
+      - No permite reservar sala fuera de servicio
+      - Muestra advertencia si la sala tiene inconvenientes (requiere force=True)
+      - Valida capacidad, roles y límites semanales/diarios
+    """
+
+    # ======================================================
+    # 0) Validación de estado de sala (calculado + manual)
+    # ======================================================
+    sql_estado = """
+        SELECT estado_manual, estado_calculado
+        FROM vista_estado_sala
+        WHERE nombre_sala = %s AND edificio = %s
+        LIMIT 1;
+    """
+    row_estado = execute_query(sql_estado, (r.nombre_sala, r.edificio), fetch=True)
+
+    if not row_estado:
+        raise Exception("La sala no existe.")
+
+    estado_manual = row_estado[0]["estado_manual"]
+    estado_calculado = row_estado[0]["estado_calculado"]
+
+    # ❌ BLOQUEAR reserva si sala está fuera de servicio (manual o calculado)
+    if estado_manual == "fuera_de_servicio" or estado_calculado == "fuera_de_servicio":
+        raise Exception("La sala está fuera de servicio y no se puede reservar.")
+
+    # ⚠ Advertencia si está con inconvenientes y NO vino force=true
+    if (estado_manual == "con_inconvenientes" or estado_calculado == "con_inconvenientes") and not force:
+        sql_incidencias = """
+            SELECT descripcion, gravedad
+            FROM incidencia_sala
+            WHERE nombre_sala = %s
+              AND edificio = %s
+              AND estado <> 'resuelta';
+        """
+        incidencias = execute_query(
+            sql_incidencias, (r.nombre_sala, r.edificio), fetch=True
+        )
+
+        raise Warning({
+            "warning": "La sala tiene inconvenientes.",
+            "incidencias": incidencias,
+            "action": "Reenviar reserva con force=true para confirmar."
+        })
+
+    # ======================================================
+    # Validaciones existentes (ya estaban en tu servicio)
+    # ======================================================
     validar_capacidad(r)
     validar_participantes_rol_sala(r)
-    # valida límites (solo aplican a estudiantes de grado)
     validar_cantidad_reservas(r)
 
-    # crea la reserva y obtener el id generado (muy importante)
+    # ======================================================
+    # Crear reserva
+    # ======================================================
     query_reserva = """
-    INSERT INTO reserva (nombre_sala, edificio, fecha, id_turno, estado)
-    VALUES (%s, %s, %s, %s, %s);
+        INSERT INTO reserva (nombre_sala, edificio, fecha, id_turno, estado)
+        VALUES (%s, %s, %s, %s, %s);
     """
+
     params_reserva = (
         r.nombre_sala,
         r.edificio,
@@ -38,13 +89,15 @@ def create_reserva(r: ReservaCreate) -> None:
     id_reserva = execute_returning_id(query_reserva, params_reserva)
 
     query_participante = """
-    INSERT INTO reserva_participante (ci_participante, id_reserva, asistencia)
-    VALUES (%s, %s, %s);
+        INSERT INTO reserva_participante (ci_participante, id_reserva, asistencia)
+        VALUES (%s, %s, %s);
     """
 
     for ci in r.participantes_ci:
         params_participante = (ci, id_reserva, False)
         execute_query(query_participante, params_participante, fetch=False)
+
+    return id_reserva
 
 
 def remove_reserva(id: int) -> None:
