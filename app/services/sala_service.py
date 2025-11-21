@@ -16,7 +16,7 @@ def create_sala(s: SalaCreate) -> None:
         VALUES (%s, %s, %s, %s);
     """
     params: tuple[str, str, int, str] = (s.nombre_sala, s.edificio, s.capacidad, s.tipo_sala.value)
-    execute_query(query, params, fetch=False)
+    execute_query(query, params, fetch=False, is_admin=True) # TIENE QUE SER ADMIN
 
 def listar_salas() -> List[SalaRow]:
     query: str = "SELECT * FROM sala;"
@@ -29,7 +29,7 @@ def eliminar_sala(nombre_sala: str, edificio: str) -> None:
     """
     query: str = "DELETE FROM sala WHERE nombre_sala=%s AND edificio=%s;"
     params: tuple[str, str] = (nombre_sala, edificio)
-    execute_query(query, params, fetch=False)
+    execute_query(query, params, fetch=False, is_admin=True)
 
 def update_sala(update: SalaUpdate) -> None:
     """
@@ -54,7 +54,7 @@ def update_sala(update: SalaUpdate) -> None:
 
     query: str = f"UPDATE sala SET {', '.join(sets)} WHERE nombre_sala=%s AND edificio=%s;"
     params.extend([update.nombre_sala, update.edificio])
-    execute_query(query, tuple(params), fetch=False)
+    execute_query(query, tuple(params), fetch=False, is_admin=True)
     
     
     
@@ -144,7 +144,7 @@ def listar_salas_con_estado() -> List[SalaEstadoRow]:
 # +++ NUEVO: actualizar estado manual (admin)
 def actualizar_estado_manual(nombre_sala: str, edificio: str, nuevo_estado: EstadoOperativo) -> None:
     sql = "UPDATE sala SET estado=%s WHERE nombre_sala=%s AND edificio=%s;"
-    execute_query(sql, (nuevo_estado, nombre_sala, edificio), fetch=False)
+    execute_query(sql, (nuevo_estado, nombre_sala, edificio), fetch=False, is_admin=True)
 
 
 # +++ NUEVO: helper para bloquear reservas si está fuera de servicio

@@ -15,7 +15,7 @@ def create_participante(p: ParticipanteCreate) -> None:
         VALUES (%s, %s, %s, %s);
     """
     params: tuple[str, str, str, str] = (p.ci, p.nombre, p.apellido, p.email)
-    execute_query(query, params, fetch=False)
+    execute_query(query, params, fetch=False, is_admin=True)
 
 
 def listar_participantes() -> List[ParticipanteRow]:
@@ -42,7 +42,7 @@ def eliminar_participante(ci: str) -> None:
     """
     query: str = "DELETE FROM participante WHERE ci = %s;"
     params: tuple[str] = (ci,) 
-    execute_query(query, params, fetch=False)
+    execute_query(query, params, fetch=False, is_admin=True)
 
 def update_participante(update: ParticipanteUpdate) -> None:
     """

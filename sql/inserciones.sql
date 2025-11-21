@@ -2,6 +2,7 @@
 
 
 CREATE USER 'app_user'@'%' IDENTIFIED BY 'obligatorio1234';
+CREATE USER 'admin'@'%' IDENTIFIED BY 'obligatorio1234_admin';
 
 GRANT
     SELECT,
@@ -11,14 +12,43 @@ GRANT
 ON
     reservas_salas_estudio.*
 TO
-    'app_user'@'%';
+    'admin'@'%';
 
 GRANT
     SELECT
 ON
     reservas_salas_estudio.vista_estado_sala
 TO
-    'app_user'@'%';
+    'admin'@'%';
+
+GRANT SELECT
+ON reservas_salas_estudio.*
+TO 'app_user'@'%';
+
+
+GRANT INSERT, UPDATE
+ON reservas_salas_estudio.reserva
+TO 'app_user'@'%';
+
+GRANT INSERT, UPDATE
+ON reservas_salas_estudio.reserva_participante
+TO 'app_user'@'%';
+
+GRANT INSERT, UPDATE
+ON reservas_salas_estudio.sesion_login
+TO 'app_user'@'%';
+
+GRANT INSERT, UPDATE
+ON reservas_salas_estudio.incidencia_sala
+TO 'app_user'@'%';
+
+GRANT INSERT, UPDATE
+ON reservas_salas_estudio.alerta_reserva
+TO 'app_user'@'%';
+
+GRANT UPDATE
+ON reservas_salas_estudio.login
+TO 'app_user'@'%';
 
 FLUSH PRIVILEGES;
 
