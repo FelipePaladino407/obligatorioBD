@@ -6,10 +6,16 @@ dotenv_path = '.env'
 dotenv.load_dotenv()
 
 @dataclass(frozen=True)
+
 class Config:
-    DB_HOST: str = os.getenv("DB_HOST", "localhost")
-    DB_PORT: int = int(os.getenv("DB_PORT", "3306"))
-    DB_USER: str = os.getenv("DB_USER", "root")
-    DB_PASS: str = os.getenv("DB_PASS", "")
-    DB_NAME: str = os.getenv("DB_NAME", "gestion_salas")
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "shhh")
+    DB_HOST = os.getenv("DB_HOST", "db")
+    DB_NAME = os.getenv("DB_NAME", "reservas_salas_estuido")
+
+    DB_USER_ADMIN = os.getenv("DB_USER_ADMIN")
+    DB_PASS_ADMIN = os.getenv("DB_PASS_ADMIN")
+
+    DB_USER_APP = os.getenv("DB_USER_APP")
+    DB_PASS_APP = os.getenv("DB_PASS_APP")
+
+    SECRET_KEY = os.getenv("SECRET_KEY", "lamentable")
+
