@@ -110,7 +110,7 @@ def remove_reserva(id: int) -> None:
     DELETE FROM reserva WHERE id_reserva = %s;
     """
     params: tuple[int] = (id,)
-    execute_query(query, params, fetch=False)
+    execute_query(query, params, fetch=False, is_admin=True)
 
 def list_reservas() -> List[ReservaRow]:
     """
