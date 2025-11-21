@@ -1,5 +1,6 @@
 from flask import Blueprint, jsonify, request
-from app.auth import admin_required
+from app.auth import admin_required, required_token
+from app.db import execute_query
 from app.models.sala_model import SalaCreate, SalaUpdate
 from app.enums.tipo_sala import TipoSala
 from app.services.sala_service import (
@@ -12,6 +13,8 @@ from app.services.sala_service import (
 )
 
 sala_bp = Blueprint("salas", __name__)
+
+VALID_ESTADOS_SALA = {"operativa", "con_inconvenientes", "fuera_de_servicio"}
 
 @sala_bp.get("/")
 def listar():
@@ -93,21 +96,82 @@ def eliminar():
     except Exception as e:
         return jsonify({"error": f"{str(e)}"}), 500
 
-@sala_bp.patch("/estado-manual")
+
+@sala_bp.patch("/estado_manual/<string:nombre>/<string:edificio>")
 @admin_required
-def actualizar_estado():
+def actualizar_estado_manual(nombre: str, edificio: str):
+    """
+    Permite a un ADMIN actualizar el estado manual de una sala.
+    Estados válidos: 'operativa', 'con_inconvenientes', 'fuera_de_servicio'.
+    """
     data = request.get_json(force=True)
-    
-    if "nombre_sala" not in data or "edificio" not in data:
-        return jsonify({"message": "Faltan ids: nombre_sala y edificio"}), 400
+    nuevo_estado = data.get("estado")
 
-    nombre_sala = data["nombre_sala"]
-    edificio = data["edificio"]
-    nuevo_estado = data.get("nuevo_estado")
-    
-    try:
-        actualizar_estado_manual(nombre_sala, edificio, nuevo_estado)
-        return jsonify({"message": f"Estado manual actualizado a {nuevo_estado}"}), 200
-    except Exception as e:
-        return jsonify({"error": f"{str(e)}"}), 500
+    if nuevo_estado not in VALID_ESTADOS_SALA:
+        return jsonify({
+            "error": "Estado inválido. Debe ser 'operativa', 'con_inconvenientes' o 'fuera_de_servicio'"
+        }), 400
 
+    # Verificar que la sala exista
+    sql_check = """
+        SELECT nombre_sala, edificio, estado
+        FROM sala
+        WHERE nombre_sala = %s AND edificio = %s;
+    """
+    rows = execute_query(sql_check, (nombre, edificio), fetch=True)
+    if not rows:
+        return jsonify({"error": "Sala no encontrada"}), 404
+
+    # Actualizar estado manual
+    sql_update = """
+        UPDATE sala
+        SET estado = %s
+        WHERE nombre_sala = %s AND edificio = %s;
+    """
+    execute_query(sql_update, (nuevo_estado, nombre, edificio), fetch=False)
+
+    return jsonify({
+        "message": "Estado manual actualizado correctamente",
+        "sala": nombre,
+        "edificio": edificio,
+        "estado_manual": nuevo_estado
+    }), 200
+
+
+@sala_bp.get("/estado")
+@required_token
+def listar_estado_salas():
+    """
+    Devuelve el estado calculado de todas las salas.
+    """
+    query = """
+        SELECT
+            nombre_sala,
+            edificio,
+            estado_calculado,
+            estado_manual
+        FROM vista_estado_sala;
+    """
+    result = execute_query(query, None, fetch=True)
+    return jsonify(result), 200
+
+
+@sala_bp.get("/estado/<string:nombre>/<string:edificio>")
+@required_token
+def estado_sala_especifica(nombre, edificio):
+    query = """
+        SELECT
+            nombre_sala,
+            edificio,
+            estado_calculado,
+            estado_manual
+        FROM vista_estado_sala
+        WHERE nombre_sala = %s AND edificio = %s;
+    """
+
+    result = execute_query(query, (nombre, edificio), fetch=True)
+
+    if not result:
+        return jsonify({"error": "Sala no encontrada"}), 404
+
+    return jsonify(result[0]), 200
