@@ -100,6 +100,8 @@ def mis_datos():
         "tipo_programa": row.get("tipo_programa"),
         "rol": row.get("rol"),
         "facultad": row.get("facultad"),
+        "is_admin": bool(getattr(request, "is_admin", False)),
     }), 200
+
 
 
