@@ -4,7 +4,6 @@ from typing import Dict, List, cast
 
 from flask import jsonify, request
 
-from app import reserva_bp
 from app.auth import required_token
 from app.db import execute_query, execute_returning_id
 from app.enums.tipo_sala import TipoSala
@@ -211,22 +210,6 @@ def list_reservas_usuario(correo: str):
     result = execute_query(query, (ci,), fetch=True)
     return cast(List[ReservaRow], result)
 
-
-@reserva_bp.patch("/<int:id>/cancelar")
-@required_token
-def cancelar_mia(id: int):
-    correo = getattr(request, "correo", None)
-    if not correo:
-        return jsonify({"error": "No se pudo obtener usuario del token"}), 401
-
-    try:
-        cancelar_reserva_usuario(id, correo)
-    except PermissionError as e:
-        return jsonify({"error": str(e)}), 403
-    except Exception as e:
-        return jsonify({"error": str(e)}), 500
-
-    return jsonify({"message": "Reserva cancelada correctamente"}), 200
 
 
 def cancelar_reserva_usuario(id_reserva: int, correo: str):

@@ -1,7 +1,8 @@
 from flask import Blueprint, jsonify, request
 from app.auth import required_token
 from app.models.reserva_model import ReservaCreate
-from app.services.reserva_service import create_reserva, list_reservas, remove_reserva, list_reservas_usuario
+from app.services.reserva_service import create_reserva, list_reservas, remove_reserva, list_reservas_usuario, \
+    cancelar_reserva_usuario
 
 reserva_bp = Blueprint("reserva", __name__)
 
@@ -79,3 +80,20 @@ def mis_reservas():
     ]
 
     return jsonify({"reservas": reservas_serializadas}), 200
+
+
+@reserva_bp.patch("/<int:id>/cancelar")
+@required_token
+def cancelar_mia(id: int):
+    correo = getattr(request, "correo", None)
+    if not correo:
+        return jsonify({"error": "No se pudo obtener usuario del token"}), 401
+
+    try:
+        cancelar_reserva_usuario(id, correo)
+    except PermissionError as e:
+        return jsonify({"error": str(e)}), 403
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+    return jsonify({"message": "Reserva cancelada correctamente"}), 200
