@@ -100,7 +100,7 @@ def mis_reservas():
         for r in reservas
     ]
 
-    return jsonify({"reservas": reservas_serializadas}), 200
+    return jsonify(reservas_serializadas), 200
 
 
 @reserva_bp.patch("/<int:id>/cancelar")
