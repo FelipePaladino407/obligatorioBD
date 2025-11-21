@@ -26,7 +26,11 @@ def listar_participantes() -> List[ParticipanteRow]:
     Returns:
         Despues te digo
     """
-    query: str = "SELECT * FROM participante;"
+    query: str = """
+    SELECT p.ci, p.nombre, p.apellido, p.email, pp.nombre_programa, pp.rol, pa.tipo 
+    FROM participante p JOIN participante_programa_academico pp on p.ci = pp.ci_participante JOIN reservas_salas_estudio.programa_academico pa on pp.nombre_programa = pa.nombre_programa
+    """
+
     result: List[Dict[str, Any]] = execute_query(query, None, fetch=True)
     return cast(List[ParticipanteRow], result) 
 

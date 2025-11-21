@@ -15,8 +15,11 @@ participante_bp = Blueprint("participante", __name__)
 
 @participante_bp.get("/")
 def listar():
-    participantes = listar_participantes()
-    return jsonify(participantes)
+    try:
+        participantes = listar_participantes()
+        return jsonify(participantes), 200
+    except Exception as e:
+        return jsonify({"error": f"{str(e)}"}), 500
 
 
 @participante_bp.post("/")

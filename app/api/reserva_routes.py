@@ -9,20 +9,23 @@ reserva_bp = Blueprint("reserva", __name__)
 @reserva_bp.get("/")
 @required_token
 def get_reservas():
-    reservas = list_reservas()
-    # Convertimos todo a tipos que JSON entiende
-    reservas_serializadas = [
-        {
-            "id": r["id_reserva"],
-            "nombre_sala": r["nombre_sala"],
-            "edificio": r["edificio"],
-            "fecha": r["fecha"].isoformat(),  # date → string
-            "id_turno": r["id_turno"],
-            "estado": r["estado"]
-        } for r in reservas
-    ]
-    print(reservas)
-    return jsonify(reservas_serializadas)
+    try:
+        reservas = list_reservas()
+        # Convertimos todo a tipos que JSON entiende
+        reservas_serializadas = [
+            {
+                "id": r["id_reserva"],
+                "nombre_sala": r["nombre_sala"],
+                "edificio": r["edificio"],
+                "fecha": r["fecha"].isoformat(),  # date → string
+                "id_turno": r["id_turno"],
+                "estado": r["estado"]
+            } for r in reservas
+        ]
+        print(reservas)
+        return jsonify(reservas_serializadas)
+    except Exception as e:
+        return jsonify({"error": f"{str(e)}"}), 500
 
 
 @reserva_bp.post("/")

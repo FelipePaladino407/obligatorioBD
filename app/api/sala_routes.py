@@ -5,6 +5,7 @@ from app.models.sala_model import SalaCreate, SalaUpdate
 from app.enums.tipo_sala import TipoSala
 from app.services.sala_service import (
     create_sala,
+    listar_salas,
     listar_salas_con_estado,
     get_sala,
     update_sala,
@@ -18,8 +19,11 @@ VALID_ESTADOS_SALA = {"operativa", "con_inconvenientes", "fuera_de_servicio"}
 
 @sala_bp.get("/")
 def listar():
-    salas = listar_salas_con_estado()
-    return jsonify(salas)
+    try:
+        salas = listar_salas()
+        return jsonify(salas), 200
+    except Exception as e:
+        return jsonify({"error": f"{str(e)}"}), 500
 
 @sala_bp.post("/")
 @admin_required
