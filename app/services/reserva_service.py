@@ -265,7 +265,7 @@ def list_reservas_usuario(correo: str):
 
 
 
-def cancelar_reserva_usuario(id_reserva: int, correo: str):
+def cancelar_reserva_usuario(id_reserva: int, correo: str, is_admin: bool = False):
     """
     Cancela una reserva solo si:
     - El usuario participa en ella
@@ -287,7 +287,7 @@ def cancelar_reserva_usuario(id_reserva: int, correo: str):
     """
     rows = execute_query(sql_check, (id_reserva, ci), fetch=True)
 
-    if not rows:
+    if not rows and not is_admin:
         raise PermissionError("No puedes modificar una reserva que no es tuya")
 
     estado = rows[0]["estado"]
