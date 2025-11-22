@@ -62,3 +62,54 @@ def listar_incidencias_por_sala(nombre_sala: str, edificio: str) -> List[Inciden
         ORDER BY fecha_reporte DESC;
     """
     return execute_query(sql, (nombre_sala, edificio), fetch=True)
+
+def listar_incidencias_por_reportante(ci_reportante: str) -> List[IncidenciaRow]:
+    """
+    Devuelve todas las incidencias reportadas por un participante (según su CI),
+    ordenadas de la más reciente a la más vieja.
+    """
+    sql = """
+        SELECT *
+        FROM incidencia_sala
+        WHERE ci_reportante = %s
+        ORDER BY fecha_reporte DESC;
+    """
+    return execute_query(sql, (ci_reportante,), fetch=True)
+
+def resolver_incidencia_usuario(id_incidencia: int):
+    """
+    Marca la incidencia como resuelta y elimina alertas asociadas.
+    (No requiere saber si es admin; eso se valida en el route)
+    """
+    upd = IncidenciaUpdateEstado(
+        id_incidencia=id_incidencia,
+        nuevo_estado=EstadoIncidencia.RESUELTA
+    )
+    actualizar_estado_incidencia(upd)
+
+    sql_del = "DELETE FROM alerta_reserva WHERE id_incidencia = %s;"
+    execute_query(sql_del, (id_incidencia,), fetch=False)
+
+    return True
+
+
+
+def delete_incidencia(id_incidencia: int) -> bool:
+    """
+    Elimina una incidencia y, por cascada, todas sus alertas asociadas.
+    Retorna True si se eliminó, False si no existía.
+    """
+
+    # PARA VERIFICAR QUE EXISTE: UUUUUUUUUUUUUUU
+    sql_check = """
+        SELECT 1 FROM incidencia_sala WHERE id_incidencia = %s LIMIT 1;
+    """
+    exists = execute_query(sql_check, (id_incidencia,), fetch=True)
+    if not exists:
+        return False
+
+    # Elimino la incidencia (las alertas se borran por ON DELETE CASCADE)
+    sql_delete = "DELETE FROM incidencia_sala WHERE id_incidencia = %s;"
+    execute_query(sql_delete, (id_incidencia,), fetch=False)
+
+    return True

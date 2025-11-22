@@ -10,7 +10,7 @@ from app.services.sala_service import (
     get_sala,
     update_sala,
     eliminar_sala,
-    actualizar_estado_manual
+    actualizar_estado_manual, obtener_estado_sala
 )
 
 sala_bp = Blueprint("salas", __name__)
@@ -96,13 +96,10 @@ def eliminar():
     except Exception as e:
         return jsonify({"error": f"{str(e)}"}), 500
 
+
 @sala_bp.patch("/estado_manual/<string:nombre>/<string:edificio>")
 @admin_required
-def actualizar_estado_manual(nombre: str, edificio: str):
-    """
-    Permite a un ADMIN actualizar el estado manual de una sala.
-    Estados válidos: 'operativa', 'con_inconvenientes', 'fuera_de_servicio'.
-    """
+def actualizar_estado_manual_route(nombre: str, edificio: str):
     data = request.get_json(force=True)
     nuevo_estado = data.get("estado")
 
@@ -111,23 +108,10 @@ def actualizar_estado_manual(nombre: str, edificio: str):
             "error": "Estado inválido. Debe ser 'operativa', 'con_inconvenientes' o 'fuera_de_servicio'"
         }), 400
 
-    # Verificar que la sala exista
-    sql_check = """
-        SELECT nombre_sala, edificio, estado
-        FROM sala
-        WHERE nombre_sala = %s AND edificio = %s;
-    """
-    rows = execute_query(sql_check, (nombre, edificio), fetch=True)
-    if not rows:
-        return jsonify({"error": "Sala no encontrada"}), 404
-
-    # Actualizar estado manual
-    sql_update = """
-        UPDATE sala
-        SET estado = %s
-        WHERE nombre_sala = %s AND edificio = %s;
-    """
-    execute_query(sql_update, (nuevo_estado, nombre, edificio), fetch=False)
+    try:
+        actualizar_estado_manual(nombre, edificio, nuevo_estado)
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
 
     return jsonify({
         "message": "Estado manual actualizado correctamente",
@@ -140,37 +124,14 @@ def actualizar_estado_manual(nombre: str, edificio: str):
 @sala_bp.get("/estado")
 @required_token
 def listar_estado_salas():
-    """
-    Devuelve el estado calculado de todas las salas.
-    """
-    query = """
-        SELECT
-            nombre_sala,
-            edificio,
-            estado_calculado,
-            estado_manual
-        FROM vista_estado_sala;
-    """
-    result = execute_query(query, None, fetch=True)
+    result = listar_salas_con_estado()
     return jsonify(result), 200
 
 
 @sala_bp.get("/estado/<string:nombre>/<string:edificio>")
 @required_token
 def estado_sala_especifica(nombre, edificio):
-    query = """
-        SELECT
-            nombre_sala,
-            edificio,
-            estado_calculado,
-            estado_manual
-        FROM vista_estado_sala
-        WHERE nombre_sala = %s AND edificio = %s;
-    """
-
-    result = execute_query(query, (nombre, edificio), fetch=True)
-
+    result = obtener_estado_sala(nombre, edificio)
     if not result:
         return jsonify({"error": "Sala no encontrada"}), 404
-
-    return jsonify(result[0]), 200
+    return jsonify(result), 200
