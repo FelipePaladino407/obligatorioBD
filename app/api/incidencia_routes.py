@@ -10,7 +10,8 @@ from app.enums.extra.tipo_incidencia import TipoIncidencia
 from app.models.extra.incidencia_model import IncidenciaCreate, IncidenciaUpdateEstado
 from app.services.extra.alerta_reserva_service import propagar_alertas_por_incidencia
 from app.services.extra.incidencia_service import crear_incidencia, listar_incidencias_por_sala, \
-    actualizar_estado_incidencia, listar_incidencias_por_reportante
+    actualizar_estado_incidencia, listar_incidencias_por_reportante, resolver_incidencia_usuario, obtener_incidencia, \
+    delete_incidencia
 from app.services.participante_service import obtener_datos_participante_por_correo
 
 incidencia_bp = Blueprint("incidencia", __name__)
@@ -120,3 +121,54 @@ def mis_incidencias():
     incidencias = listar_incidencias_por_reportante(ci)
 
     return jsonify(incidencias), 200
+
+# PARA QUE EL USER PUEDA RESOLVER SU PROPIA INCIDENCIA:
+@incidencia_bp.patch("/<int:id>/resolver")
+@required_token
+def resolver_mia(id: int):
+    correo = getattr(request, "correo", None)
+    is_admin = bool(getattr(request, "is_admin", False))
+
+    if not correo:
+        return jsonify({"error": "No autenticado"}), 401
+
+    participante = obtener_datos_participante_por_correo(correo)
+    if not participante:
+        return jsonify({"error": "No se encontró participante"}), 400
+
+    ci = participante["ci"]
+
+    # Obtener incidencia desde service
+    inc = obtener_incidencia(id)
+    if not inc:
+        return jsonify({"error": "Incidencia no encontrada"}), 404
+
+    # Verificación de permisos:
+    # - Si la incidencia no es del usuario y no es admin → prohibido
+    if inc["ci_reportante"] != ci and not is_admin:
+        return jsonify({"error": "No podés resolver incidencias de otros"}), 403
+
+    # Resolverla (service)
+    resolver_incidencia_usuario(id)
+
+    return jsonify({"message": "Incidencia marcada como resuelta"}), 200
+
+
+@incidencia_bp.delete("/<int:id_incidencia>")
+@admin_required
+def eliminar_incidencia(id_incidencia: int):
+    """
+    Elimina una incidencia y sus alertas asociadas.
+    Solo un administrador puede realizar esta acción.
+    """
+
+    eliminado = delete_incidencia(id_incidencia)
+
+    if not eliminado:
+        return jsonify({"error": "Incidencia no encontrada"}), 404
+
+    return jsonify({
+        "message": "Incidencia eliminada correctamente",
+        "id_incidencia": id_incidencia
+    }), 200
+
