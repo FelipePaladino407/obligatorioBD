@@ -1,12 +1,13 @@
 from app.auth import required_token, admin_required
 from app.db import execute_query
-from app.models.participante_model import ParticipanteCreate, ParticipanteRow, ParticipanteUpdate
+from app.models.participante_model import ParticipanteCreate, ParticipanteRow, ParticipanteUpdate, ParticpanteProgramaUpdate
 from app.services.participante_service import (
     create_participante,
     eliminar_participante,
     listar_participantes,
     update_participante,
     obtener_datos_participante_por_correo,
+    update_particpante_programa,
 )
 from flask import Blueprint, jsonify, request
 
@@ -61,21 +62,48 @@ def eliminar(ci: str):
         return jsonify({"error": f"{str(e)}"}), 500
 
 
+
 @participante_bp.patch("/<string:ci>")
 @admin_required
 def actualizar(ci: str):
     data = request.get_json(force=True)
+
+    participante_data = data.get("participante", {})
     participante_update = ParticipanteUpdate(
         ci=ci,
-        nombre=data.get("nombre"),
-        apellido=data.get("apellido"),
-        email=data.get("email"),
+        nombre=participante_data.get("nombre"),
+        apellido=participante_data.get("apellido"),
+        email=participante_data.get("email"),
     )
+
+    # Datos del programa académico (MODIFICACION DE ULTIMO MOMENTO) EMERGENCIA
+    # No funca lo de modificar cedula. Rompe integridad referencial
+    programa_data = data.get("programa", {})
+
+    participante_programa_update = ParticpanteProgramaUpdate(
+        ci=ci,
+        nombre_programa=programa_data.get("nombre_programa"),
+        rol=programa_data.get("rol")
+    )
+
     try:
-        update_participante(participante_update)
-        return jsonify({"message": "Participante actualizado correctamente"}), 200
+        if any([
+            participante_update.nombre is not None,
+            participante_update.apellido is not None,
+            participante_update.email is not None
+        ]):
+            update_participante(participante_update)
+
+        if any([
+            participante_programa_update.nombre_programa is not None,
+            participante_programa_update.rol is not None,
+        ]):
+            update_particpante_programa(participante_programa_update)
+
+        return jsonify({"message": "Participante actualizado joya"}), 200
+
     except Exception as e:
-        return jsonify({"error": f"{str(e)}"}), 500
+        return jsonify({"error": str(e)}), 500
 
 # Para FronTend BlackMan:
 @participante_bp.get("/me")
