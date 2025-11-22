@@ -18,8 +18,11 @@ def login():
 
     is_admin = bool(user["isAdmin"])
 
-    token = generate_token(correo=user["correo"], is_admin=is_admin)
-    return jsonify({"token": token}), 200
+    try:
+        token = generate_token(correo=user["correo"], is_admin=is_admin)
+        return jsonify({"token": token}), 200
+    except Exception as e:
+        return jsonify({"error": f"{str(e)}"}), 500
 
 
 @auth_bp.post("/logout")

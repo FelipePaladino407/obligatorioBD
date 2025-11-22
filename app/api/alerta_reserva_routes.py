@@ -10,15 +10,21 @@ alerta_bp = Blueprint("alerta", __name__)
 @required_token
 def alertas_reserva(id_reserva: int):
     # opcional: validar que el usuario sea admin o participe en esa reserva
-    filas = listar_alertas_de_reserva(id_reserva, solo_no_leidas=False)
-    return jsonify(filas), 200
+    try:
+        filas = listar_alertas_de_reserva(id_reserva, solo_no_leidas=False)
+        return jsonify(filas), 200
+    except Exception as e:
+        return jsonify({"error": f"{str(e)}"}), 500
 
 
 @alerta_bp.patch("/<int:id_alerta>/leida")
 @required_token
 def marcar_leida(id_alerta: int):
-    marcar_alerta_leida(id_alerta)
-    return jsonify({"message": "Alerta marcada como leída"}), 200
+    try:
+        marcar_alerta_leida(id_alerta)
+        return jsonify({"message": "Alerta marcada como leída"}), 200
+    except Exception as e:
+        return jsonify({"error": f"{str(e)}"}), 500
 
 
 @alerta_bp.get("/me")
@@ -28,5 +34,8 @@ def alertas_usuario():
     if not correo:
         return jsonify({"error": "No autenticado"}), 401
 
-    result = listar_alertas_usuario(correo)
-    return jsonify(result), 200
+    try:
+        result = listar_alertas_usuario(correo)
+        return jsonify(result), 200
+    except Exception as e:
+        return jsonify({"error": f"{str(e)}"}), 500
