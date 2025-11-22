@@ -14,8 +14,11 @@ sancion_bp = Blueprint("sancion", __name__)
 
 @sancion_bp.get("/")
 def list():
-    sanciones = listar_sanciones()
-    return jsonify(sanciones)
+    try:
+        sanciones = listar_sanciones()
+        return jsonify(sanciones)
+    except Exception as e:
+        return jsonify({"error": f"{str(e)}"}), 500
 
 
 @sancion_bp.post("/")
@@ -28,8 +31,11 @@ def create():
         fecha_fin=data["fecha_fin"],
         motivo=data["motivo"],
     )
-    crear_sancion(sancion)
-    return jsonify({"message": "Muchacho fletado"}), 201
+    try:
+        crear_sancion(sancion)
+        return jsonify({"message": "Muchacho fletado"}), 201
+    except Exception as e:
+        return jsonify({"error": f"{str(e)}"}), 500
 
 
 @sancion_bp.get("/me")
