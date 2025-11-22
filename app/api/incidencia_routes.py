@@ -86,10 +86,13 @@ def crear():
 @incidencia_bp.get("/sala")
 @admin_required
 def listar_por_sala():
-    nombre_sala = request.args.get("nombre_sala")
-    edificio = request.args.get("edificio")
-    filas = listar_incidencias_por_sala(nombre_sala, edificio)
-    return jsonify(filas), 200
+    try:
+        nombre_sala = request.args.get("nombre_sala")
+        edificio = request.args.get("edificio")
+        filas = listar_incidencias_por_sala(nombre_sala, edificio)
+        return jsonify(filas), 200
+    except Exception as e:
+        return jsonify({"error": f"{str(e)}"}), 500
 
 
 @incidencia_bp.patch("/<int:id>/estado")

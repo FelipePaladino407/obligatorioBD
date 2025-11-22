@@ -11,7 +11,6 @@ reserva_bp = Blueprint("reserva", __name__)
 def get_reservas():
     try:
         reservas = list_reservas()
-        # Convertimos todo a tipos que JSON entiende
         reservas_serializadas = [
             {
                 "id": r["id_reserva"],
@@ -87,7 +86,6 @@ def mis_reservas():
     except Exception as e:
         return jsonify({"error": f"{e}"}), 500
 
-    # Serializar
     reservas_serializadas = [
         {
             "id_reserva": r["id_reserva"],
@@ -100,7 +98,7 @@ def mis_reservas():
         for r in reservas
     ]
 
-    return jsonify({"reservas": reservas_serializadas}), 200
+    return jsonify(reservas_serializadas), 200
 
 
 @reserva_bp.patch("/<int:id>/cancelar")
