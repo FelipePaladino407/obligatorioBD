@@ -25,17 +25,20 @@ def listar_salas() -> List[SalaRow]:
 
 def eliminar_sala(nombre_sala: str, edificio: str) -> None:
     """
-    Borra la sala. Fallará si hay reservas que referencian esa sala (FK).
+    Borra la sala. Fallece si hay reservas que referencian esa sala (FK).
     """
     query: str = "DELETE FROM sala WHERE nombre_sala=%s AND edificio=%s;"
     params: tuple[str, str] = (nombre_sala, edificio)
     execute_query(query, params, fetch=False, is_admin=True)
 
-def update_sala(update: SalaUpdate) -> None:
+
+def update_sala(update: SalaUpdate, old_nombre_sala: str, old_edificio: str) -> None:
     """
-    Actualiza solo los campos provistos (SET parcial).
-    Se identifica por clave compuesta (nombre_sala, edificio).
+    Actualiza solo los campos provistos.
+    Permite modificar la clave compuesta usando los valores originales.
+    Ahora marcha joyazo
     """
+
     sets: List[str] = []
     params: List[Any] = []
 
@@ -47,13 +50,27 @@ def update_sala(update: SalaUpdate) -> None:
 
     if update.tipo_sala is not None:
         sets.append("tipo_sala = %s")
-        params.append(update.tipo_sala)
+        params.append(update.tipo_sala.value)
+
+    if update.nombre_sala is not None:
+        sets.append("nombre_sala = %s")
+        params.append(update.nombre_sala)
+
+    if update.edificio is not None:
+        sets.append("edificio = %s")
+        params.append(update.edificio)
 
     if not sets:
         return
 
-    query: str = f"UPDATE sala SET {', '.join(sets)} WHERE nombre_sala=%s AND edificio=%s;"
-    params.extend([update.nombre_sala, update.edificio])
+    query = (
+        f"UPDATE sala SET {', '.join(sets)} "
+        f"WHERE nombre_sala = %s AND edificio = %s;"
+    )
+
+    params.append(old_nombre_sala)
+    params.append(old_edificio)
+
     execute_query(query, tuple(params), fetch=False, is_admin=True)
     
     
@@ -85,14 +102,13 @@ def get_sala(nombre_sala: str, edificio: str) -> Optional[SalaRow]:
     return cast(SalaRow, result[0])
 
 
-# +++ NUEVO: leer estado (VIEW → fallback)
 def obtener_estado_sala(nombre_sala: str, edificio: str) -> Optional[SalaEstadoRow]:
     """
     Intenta leer 'vista_estado_sala' (estado_calculado + estado_manual).
     Si no existe la VIEW, cae a la columna 'estado' de la tabla 'sala'
     y la usa como calculado y manual.
     """
-    # 1) Intentar VIEW
+    # 1) Intentar VIEW (que barbaro)
     try:
         sql_view = """
             SELECT nombre_sala, edificio, estado_calculado, estado_manual
@@ -105,7 +121,7 @@ def obtener_estado_sala(nombre_sala: str, edificio: str) -> Optional[SalaEstadoR
     except Exception:
         pass
 
-    # 2) Fallback tabla 'sala'
+    # 2) Si le pifia lo de arriba 
     sql_tbl = """
         SELECT nombre_sala, edificio, estado AS estado_manual
         FROM sala
@@ -119,7 +135,7 @@ def obtener_estado_sala(nombre_sala: str, edificio: str) -> Optional[SalaEstadoR
     return out
 
 
-# +++ NUEVO: listar todas con estado (VIEW → fallback)
+# UUU: listar todas con estado (VIEW -> fallback)
 def listar_salas_con_estado() -> List[SalaEstadoRow]:
     try:
         sql_view = """
@@ -141,13 +157,11 @@ def listar_salas_con_estado() -> List[SalaEstadoRow]:
         return cast(List[SalaEstadoRow], rows)
 
 
-# +++ NUEVO: actualizar estado manual (admin)
 def actualizar_estado_manual(nombre_sala: str, edificio: str, nuevo_estado: EstadoOperativo) -> None:
     sql = "UPDATE sala SET estado=%s WHERE nombre_sala=%s AND edificio=%s;"
     execute_query(sql, (nuevo_estado, nombre_sala, edificio), fetch=False, is_admin=True)
 
 
-# +++ NUEVO: helper para bloquear reservas si está fuera de servicio
 def sala_disponible_para_reserva(nombre_sala: str, edificio: str) -> bool:
     est = obtener_estado_sala(nombre_sala, edificio)
     if not est:

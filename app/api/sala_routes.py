@@ -50,38 +50,34 @@ def obtener(nombre_sala: str, edificio: str):
         return jsonify({"message": "Sala no encontrada"}), 404
     return jsonify(sala)
 
-@sala_bp.patch("/")
+
+@sala_bp.patch("/<string:edificio>/<string:nombre_sala>")
 @admin_required
-def actualizar():
+def actualizar(edificio, nombre_sala):
     try:
         data = request.get_json(force=True)
 
-        if "nombre_sala" not in data or "edificio" not in data:
-            return jsonify({"message": "Faltan identificadores: nombre_sala y edificio"}), 400
-        
-        nombre_sala = data["nombre_sala"]
-        edificio = data["edificio"]
-        
         tipo_sala_enum = None
         if "tipo_sala" in data:
             try:
                 tipo_sala_enum = TipoSala(data["tipo_sala"])
             except ValueError:
-                 return jsonify({"error": f"Tipo de sala inválido: {data['tipo_sala']}"}), 400
+                return jsonify({"error": "Tipo inválido"}), 400
 
         sala_update = SalaUpdate(
-            nombre_sala=nombre_sala,
-            edificio=edificio,
+            nombre_sala=data.get("nombre_sala"),
+            edificio=data.get("edificio"),
             capacidad=data.get("capacidad"),
             tipo_sala=tipo_sala_enum
         )
-        update_sala(sala_update)
+
+        update_sala(sala_update, nombre_sala, edificio)
         return jsonify({"message": "Sala actualizada correctamente"}), 200
 
     except ValueError as e:
         return jsonify({"error": str(e)}), 400
     except Exception as e:
-        return jsonify({"error": "Error al actualizar la sala"}), 500
+        return jsonify({"error": str(e)}), 500
 
 @sala_bp.delete("/")
 @admin_required
