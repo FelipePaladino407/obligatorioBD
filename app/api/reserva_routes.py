@@ -105,14 +105,17 @@ def mis_reservas():
 @required_token
 def cancelar_mia(id: int):
     correo = getattr(request, "correo", None)
+    is_admin = getattr(request, "is_admin", False)
+
     if not correo:
         return jsonify({"error": "No se pudo obtener usuario del token"}), 401
 
     try:
-        cancelar_reserva_usuario(id, correo)
+        cancelar_reserva_usuario(id, correo, is_admin=is_admin)
     except PermissionError as e:
         return jsonify({"error": str(e)}), 403
     except Exception as e:
         return jsonify({"error": str(e)}), 500
 
     return jsonify({"message": "Reserva cancelada correctamente"}), 200
+
