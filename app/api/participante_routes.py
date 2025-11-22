@@ -107,4 +107,23 @@ def mis_datos():
     }), 200
 
 
+from app.db import execute_query
+
+def _validar_usuario_tiene_reserva(ci: str, id_reserva: int, nombre_sala: str, edificio: str) -> bool:
+    sql = """
+        SELECT 1
+        FROM reserva r
+        JOIN reserva_participante rp ON rp.id_reserva = r.id_reserva
+        WHERE r.id_reserva = %s
+          AND r.nombre_sala = %s
+          AND r.edificio = %s
+          AND r.estado = 'activa'
+          AND rp.ci_participante = %s
+        LIMIT 1;
+    """
+    rows = execute_query(sql, (id_reserva, nombre_sala, edificio, ci), fetch=True)
+    return bool(rows)
+
+
+
 

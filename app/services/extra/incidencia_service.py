@@ -62,3 +62,16 @@ def listar_incidencias_por_sala(nombre_sala: str, edificio: str) -> List[Inciden
         ORDER BY fecha_reporte DESC;
     """
     return execute_query(sql, (nombre_sala, edificio), fetch=True)
+
+def listar_incidencias_por_reportante(ci_reportante: str) -> List[IncidenciaRow]:
+    """
+    Devuelve todas las incidencias reportadas por un participante (según su CI),
+    ordenadas de la más reciente a la más vieja.
+    """
+    sql = """
+        SELECT *
+        FROM incidencia_sala
+        WHERE ci_reportante = %s
+        ORDER BY fecha_reporte DESC;
+    """
+    return execute_query(sql, (ci_reportante,), fetch=True)
