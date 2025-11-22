@@ -1,6 +1,6 @@
 from typing import Any, Dict, List, Optional, cast
 from app.enums import tipo_usuario
-from app.models.participante_model import ParticipanteCreate, ParticipanteRow, ParticipanteUpdate
+from app.models.participante_model import ParticipanteCreate, ParticipanteRow, ParticipanteUpdate, ParticpanteProgramaUpdate
 from app.db import execute_query
 
 def create_participante(p: ParticipanteCreate) -> None:
@@ -69,7 +69,7 @@ def update_participante(update: ParticipanteUpdate) -> None:
 
     query += ", ".join(updates) + "WHERE ci = %s"
     params.append(update.ci)
-    execute_query(query, tuple(params), fetch=False)
+    execute_query(query, tuple(params), fetch=False, is_admin=True)
 
 def get_participante_rol(ci: str) -> tipo_usuario.TipoUsuario:
     query: str = """
@@ -78,6 +78,26 @@ def get_participante_rol(ci: str) -> tipo_usuario.TipoUsuario:
     params: tuple[str] = (ci, );
     rol: List[Dict[str, Any]] = execute_query(query, params, fetch=True);
     return cast(tipo_usuario.TipoUsuario, rol[0]["rol"])
+
+def update_particpante_programa(update: ParticpanteProgramaUpdate) -> None:
+    query: str = "UPDATE participante_programa_academico SET "
+    params = []
+    updates = []
+
+    if update.nombre_programa is not None:
+        updates.append("nombre_programa = %s")
+        params.append(update.nombre_programa)
+    if update.rol is not None:
+        updates.append("rol = %s")
+        params.append(update.rol)
+    if not updates:
+        return
+
+    query += ", ".join(updates) + " WHERE ci_participante = %s"
+    params.append(update.ci)
+    execute_query(query, tuple(params), fetch=False, is_admin=True)
+
+
 
 # Agrego para obtener los datos del usuario (Para: FrontEnd BlackMan)
 def obtener_datos_participante_por_correo(correo: str) -> Optional[Dict[str, Any]]:

@@ -21,3 +21,9 @@ class ParticipanteUpdate:
     nombre: Optional[str] = None
     apellido: Optional[str] = None
     email: Optional[str] = None
+
+@dataclass(frozen=True)
+class ParticpanteProgramaUpdate:
+    ci: str 
+    rol: Optional[str] = None
+    nombre_programa: Optional[str] = None
