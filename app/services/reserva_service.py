@@ -289,3 +289,25 @@ def cancelar_reserva_usuario(id_reserva: int, correo: str, is_admin: bool = Fals
     # Cancelar
     sql_cancel = "UPDATE reserva SET estado = 'cancelada' WHERE id_reserva = %s;"
     execute_query(sql_cancel, (id_reserva,), fetch=False)
+
+def marcar_no_asistencia(id_reserva: int, is_admin: bool = False):
+    """
+    - La reserva está activa
+    """
+    sql_check = """
+        SELECT r.estado
+        FROM reserva r
+        JOIN reserva_participante rp ON rp.id_reserva = r.id_reserva
+        WHERE r.id_reserva = %s;
+    """
+    rows = execute_query(sql_check, (id_reserva, ), fetch=True)
+
+    if not is_admin:
+        raise PermissionError("No puedes modificar una reserva que no es tuya")
+
+    estado = rows[0]["estado"]
+    if estado != "activa":
+        raise PermissionError(f"La reserva no está activa (estado={estado})")
+
+    sql_hugo = "UPDATE reserva SET estado = 'sin_asistencia' WHERE id_reserva = %s;"
+    execute_query(sql_hugo, (id_reserva,), fetch=False)
