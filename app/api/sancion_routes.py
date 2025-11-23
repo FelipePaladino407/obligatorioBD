@@ -5,10 +5,11 @@ from app.auth import required_token, admin_required
 from app.models.sancion_model import SancionCreate
 from app.services.sancion_service import (
     crear_sancion,
+    eliminar_sancion,
     listar_sanciones,
     listar_sanciones_por_correo,
 )
-from datetime import date
+from datetime import date, datetime
 
 sancion_bp = Blueprint("sancion", __name__)
 
@@ -73,3 +74,26 @@ def mis_sanciones():
             "sanciones": sanciones,
         }
     ), 200
+
+@sancion_bp.delete("/<string:ci>")
+@admin_required
+def borrar_sancion(ci: str):
+    """
+    Elimina una sanción pasando la fecha por JSON:
+    {
+        "fecha_inicio": "YYYY-MM-DD"
+    }
+    """
+    try:
+        data = request.get_json(force=True)
+
+        if not data or "fecha_inicio" not in data:
+            return jsonify({"error": "Se requiere 'fecha_inicio' en el body JSON"}), 400
+
+        fecha = data["fecha_inicio"]
+        eliminar_sancion(ci, fecha)
+
+        return jsonify({"message": "Sanción eliminada correctamente"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

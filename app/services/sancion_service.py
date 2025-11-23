@@ -18,12 +18,18 @@ def crear_sancion(s: SancionCreate) -> None:
     params: tuple[str, date, date, str] = (s.ci_participante, s.fecha_inicio, s.fecha_fin, s.motivo)
     execute_query(query, params, fetch=False, is_admin=True)
 
-def eliminar_sancion(ci: str, fecha_inicio: date) -> None:
+
+def eliminar_sancion(ci: str, fecha_inicio: str) -> None:
     """
-    Elimina una sanción puntual por PK compuesta (ci_participante, fecha_inicio).
+    Elimina una sanción por PK compuesta.
     """
-    query: str = "DELETE FROM sancion_participante WHERE ci_participante=%s AND fecha_inicio=%s;"
-    params: tuple[str, date] = (ci, fecha_inicio)
+
+    query: str = """
+        DELETE FROM sancion_participante
+        WHERE ci_participante=%s AND fecha_inicio=%s;
+    """
+
+    params = (ci, fecha_inicio)
     execute_query(query, params, fetch=False, is_admin=True)
 
 def listar_sanciones() -> List[SancionRow]:
