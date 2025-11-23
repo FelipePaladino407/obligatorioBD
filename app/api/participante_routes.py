@@ -46,7 +46,19 @@ def crear():
         """
         execute_query(sql_login, (participante.email, data["password"]), fetch=False, is_admin=True)
 
-        return jsonify({"message": "Participante + login creados"}), 201
+                # 3) crear participante_programa_academico
+        sql_part_prog = """
+            INSERT INTO participante_programa_academico (ci_participante, nombre_programa, rol)
+            VALUES (%s, %s, %s);
+        """
+        execute_query(
+            sql_part_prog,
+            (participante.ci, data["nombre_programa"], data["rol"]),
+            fetch=False,
+            is_admin=True
+        )
+
+        return jsonify({"message": "Participante + login + programa creados"}), 201
 
     except Exception as e:
         return jsonify({"error": f"{str(e)}"}), 500
