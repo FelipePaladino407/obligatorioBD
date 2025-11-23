@@ -43,7 +43,7 @@ CREATE TABLE login (
   isAdmin           BOOLEAN NOT NULL,
   CONSTRAINT fk_login_participante_email
     FOREIGN KEY (correo) REFERENCES participante(email)
-    ON UPDATE CASCADE ON DELETE RESTRICT
+    ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE sesion_login (
@@ -119,7 +119,7 @@ CREATE TABLE reserva_participante (
   PRIMARY KEY (ci_participante, id_reserva),
   CONSTRAINT fk_rp_ci
     FOREIGN KEY (ci_participante) REFERENCES participante(ci)
-    ON UPDATE CASCADE ON DELETE RESTRICT,
+    ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT fk_rp_reserva
     FOREIGN KEY (id_reserva) REFERENCES reserva(id_reserva)
     ON UPDATE CASCADE ON DELETE CASCADE,
@@ -135,7 +135,7 @@ CREATE TABLE sancion_participante (
   motivo            VARCHAR(200) DEFAULT 'no asistencia',
   CONSTRAINT fk_sancion_ci
     FOREIGN KEY (ci_participante) REFERENCES participante(ci)
-    ON UPDATE CASCADE ON DELETE RESTRICT,
+    ON UPDATE CASCADE ON DELETE CASCADE,
   CONSTRAINT chk_sancion_fechas CHECK (fecha_fin > fecha_inicio),
   -- Se añade un índice único para prevenir sanciones idénticas (mismo participante y misma fecha de inicio),
   -- aunque con la nueva PK ya se permiten múltiples sanciones.
@@ -172,7 +172,7 @@ CREATE TABLE incidencia_sala (
 
   CONSTRAINT fk_incidencia_reportante
     FOREIGN KEY (ci_reportante) REFERENCES participante(ci)
-    ON UPDATE CASCADE ON DELETE RESTRICT
+    ON UPDATE CASCADE ON DELETE CASCADE
 );
 
 CREATE TABLE alerta_reserva (
