@@ -44,7 +44,7 @@ def crear():
             INSERT INTO login (correo, contrasena, isAdmin)
             VALUES (%s, %s, false);
         """
-        execute_query(sql_login, (participante.email, data["password"]), fetch=False)
+        execute_query(sql_login, (participante.email, data["password"]), fetch=False, is_admin=True)
 
         return jsonify({"message": "Participante + login creados"}), 201
 

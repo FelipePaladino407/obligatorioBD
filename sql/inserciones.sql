@@ -63,7 +63,7 @@ INSERT INTO facultad (nombre) VALUES  -- Solo le pongo nombre, pues el id_facult
 ('Derecho');
 
 
-INSERT INTO edificio 
+INSERT INTO edificio
 VALUES ('Mullin', 'Comandante Braga 2745', 'Montevideo'),
 ('Athanasius - Centro Ignis', 'Gral. Urquiza 2871', 'Montevideo'),
 ('Sede Salto - UCU', 'Artigas 1251', 'Salto'),
