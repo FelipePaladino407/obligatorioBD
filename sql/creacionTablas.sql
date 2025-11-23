@@ -66,7 +66,7 @@ CREATE TABLE participante_programa_academico (
   rol                  ENUM('estudiante_grado','estudiante_posgrado', 'docente') NOT NULL,
   CONSTRAINT fk_pp_ci
     FOREIGN KEY (ci_participante) REFERENCES participante(ci)
-    ON UPDATE CASCADE ON DELETE RESTRICT,
+    ON DELETE CASCADE,
   CONSTRAINT fk_pp_programa
     FOREIGN KEY (nombre_programa) REFERENCES programa_academico(nombre_programa)
     ON UPDATE CASCADE ON DELETE RESTRICT,
