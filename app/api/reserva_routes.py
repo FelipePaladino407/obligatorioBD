@@ -118,4 +118,3 @@ def cancelar_mia(id: int):
         return jsonify({"error": str(e)}), 500
 
     return jsonify({"message": "Reserva cancelada correctamente"}), 200
-

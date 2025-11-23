@@ -135,6 +135,52 @@ def mis_datos():
     }), 200
 
 
+@participante_bp.patch("/me")
+@required_token
+def actualizar_mis_datos():
+    correo = getattr(request, "correo", None)
+    if not correo:
+        return jsonify({"error": "No se pudo obtener usuario del token"}), 401
+
+    data = request.get_json(force=True)
+
+    # Solo permitimos cambiar datos personales
+    nombre = data.get("nombre")
+    apellido = data.get("apellido")
+    email = data.get("email")
+
+    # validar email si se quiere actualizar
+    if email is not None and not email.strip():
+        return jsonify({"error": "El email no puede estar vacío"}), 400
+
+    try:
+        # Obtener CI real del usuario (no lo recibimos por payload)
+        row = obtener_datos_participante_por_correo(correo)
+        if not row:
+            return jsonify({"error": "Participante no encontrado"}), 404
+
+        ci = row["ci"]
+
+        participante_update = ParticipanteUpdate(
+            ci=ci,
+            nombre=nombre,
+            apellido=apellido,
+            email=email,
+        )
+
+        # Si no se envió nada actualizable
+        if all([nombre is None, apellido is None, email is None]):
+            return jsonify({"message": "No se enviaron cambios"}), 200
+
+        update_participante(participante_update)
+
+        return jsonify({"message": "Perfil actualizado correctamente"}), 200
+
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500
+
+
+# POR FAVOR NO VEAS ESTO  
 from app.db import execute_query
 
 def _validar_usuario_tiene_reserva(ci: str, id_reserva: int, nombre_sala: str, edificio: str) -> bool:

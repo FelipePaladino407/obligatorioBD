@@ -40,11 +40,9 @@ def create_reserva(r: ReservaCreate, force: bool = False) -> int:
     estado_manual = row_estado[0]["estado_manual"]
     estado_calculado = row_estado[0]["estado_calculado"]
 
-    # ❌ BLOQUEAR reserva si sala está fuera de servicio (manual o calculado)
     if estado_manual == "fuera_de_servicio" or estado_calculado == "fuera_de_servicio":
         raise Exception("La sala está fuera de servicio y no se puede reservar.")
 
-    # ⚠ Advertencia si está con inconvenientes y NO vino force=true
     if (estado_manual == "con_inconvenientes" or estado_calculado == "con_inconvenientes") and not force:
         sql_incidencias = """
             SELECT descripcion, gravedad
@@ -63,16 +61,10 @@ def create_reserva(r: ReservaCreate, force: bool = False) -> int:
             "action": "Reenviar reserva con force=true para confirmar."
         })
 
-    # ======================================================
-    # Validaciones existentes (ya estaban en tu servicio)
-    # ======================================================
     validar_capacidad(r)
     validar_participantes_rol_sala(r)
     validar_cantidad_reservas(r)
 
-    # ======================================================
-    # Crear reserva
-    # ======================================================
     query_reserva = """
         INSERT INTO reserva (nombre_sala, edificio, fecha, id_turno, estado)
         VALUES (%s, %s, %s, %s, %s);
@@ -273,7 +265,7 @@ def cancelar_reserva_usuario(id_reserva: int, correo: str, is_admin: bool = Fals
     """
     sql_ci = "SELECT ci FROM participante WHERE email = %s"
     rows_ci = execute_query(sql_ci, (correo,), fetch=True)
-    if not rows_ci:
+    if not rows_ci and not is_admin:
         raise PermissionError("Usuario no encontrado")
 
     ci = rows_ci[0]["ci"]
