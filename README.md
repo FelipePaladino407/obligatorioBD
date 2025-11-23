@@ -63,6 +63,13 @@ La API sigue un diseño **RESTful** y modular. El punto de entrada principal es 
 
 El acceso a los endpoints protegidos se realiza mediante **JSON Web Tokens (JWT)** pasados en el header `Authorization: Bearer <token>`. La validez del token se refuerza con una verificación en la tabla `sesion_login` (expiración y revocación).
 
+### Usuarios de prueba
+Con estos pueden probar:
+- Un admin: `marrarteChelo@ucu.edu.uy`
+- Un usuario comun: `whiskey@ucu.edu.uy`
+
+La contraseña de todos los usuarios es `1234`
+
 -----
 
 ## 🛑 El Frontend
