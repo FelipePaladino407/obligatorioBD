@@ -1,7 +1,7 @@
 from flask import Blueprint, jsonify, request
 from app.auth import required_token, admin_required
 from app.models.reserva_model import ReservaCreate
-from app.services.reserva_service import create_reserva, list_reservas, remove_reserva, list_reservas_usuario, \
+from app.services.reserva_service import create_reserva, list_reservas, marcar_no_asistencia, remove_reserva, list_reservas_usuario, \
     cancelar_reserva_usuario
 
 reserva_bp = Blueprint("reserva", __name__)
@@ -118,3 +118,13 @@ def cancelar_mia(id: int):
         return jsonify({"error": str(e)}), 500
 
     return jsonify({"message": "Reserva cancelada correctamente"}), 200
+
+@reserva_bp.patch("/<int:id>/no_asiste")
+@admin_required
+def marcar_sin_asistencia(id: int):
+    is_admin = getattr(request, "is_admin", False)
+    try:
+        marcar_no_asistencia(id, is_admin)
+        return jsonify({"message": "eguro"}), 200
+    except Exception as e:
+        return jsonify({"error": str(e)}), 500

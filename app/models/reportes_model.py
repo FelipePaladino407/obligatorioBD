@@ -1,8 +1,9 @@
 from typing import List, Tuple, Any, Dict
 from app.db import execute_query
 
-# ==== infames helpers comunes ====
 
+# INFAMES COSOS
+# NO FUNCIONAN LOS FILTROS. PERDÓN
 def _paginacion(p: dict) -> tuple[int, int]:
     limit = int(p.get("limit", 50))
     offset = int(p.get("offset", 0))
@@ -264,7 +265,7 @@ def reservas_y_asistencias_por_rol_y_tipo_programa(p: dict) -> Tuple[List[str], 
     return _exec(sql, params)
 
 
-# 9) (Propia) Salas con mayor ratio de "no asistencia"
+# 9) (Propia) Salas con mayor ratio de muchachos que no van
 def ratio_no_asistencia_por_sala(p: dict) -> Tuple[List[str], List[list]]:
     limit, offset = _paginacion(p)
     where_fecha, params = _rango_fecha_and_params(p, "r")
@@ -299,7 +300,7 @@ def ratio_no_asistencia_por_sala(p: dict) -> Tuple[List[str], List[list]]:
     params.extend([limit, offset])
     return _exec(sql, params)
 
-# 10) Alertas por tipo (sin cambios funcionales, solo consistente con tus enums)
+# 10) Alertas por tipo 
 def alertas_por_tipo(p: dict):
     limit = int(p.get("limit", 50)); offset = int(p.get("offset", 0))
     params = []; where = []
@@ -319,7 +320,7 @@ def alertas_por_tipo(p: dict):
     params.extend([limit, offset])
     return _exec(sql, params)
 
-# 11) NUEVO (opcional): Estado de salas (usa VIEW si existe, si no, tabla)
+# 11) UUUH (opcional): Estado de salas (usa VIEW si existe, si no, tabla)
 def estado_salas_resumen(p: dict):
     limit = int(p.get("limit", 50)); offset = int(p.get("offset", 0))
     try:
@@ -331,7 +332,6 @@ def estado_salas_resumen(p: dict):
         """
         return _exec(sql, [limit, offset])
     except Exception:
-        # fallback a tabla, igual que tu sala_service
         sql = """
           SELECT nombre_sala, edificio, estado AS estado_manual
           FROM sala
@@ -340,7 +340,6 @@ def estado_salas_resumen(p: dict):
         """
         cols, rows = _exec(sql, [limit, offset])
         if rows:
-            # agregar columna calculada = manual (mismo comportamiento que mi helper)
             idx = {c:i for i,c in enumerate(cols)}
             if "estado_calculado" not in cols:
                 cols = cols + ["estado_calculado"]
